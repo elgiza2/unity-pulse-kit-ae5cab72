@@ -1,4 +1,4 @@
-/** @doc Knowledge — user knowledge entries list + add sheet (mobile-first, flat dark design). */
+/** @doc Memory — user memories with a dedicated knowledge section. */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Lightbulb, Loader2, Plus, X } from "lucide-react";
@@ -20,7 +20,7 @@ function timeLabel(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-const KnowledgePage = () => {
+const MemoryPage = () => {
   const navigate = useNavigate();
   const [rows, setRows] = useState<KnowledgeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,13 +105,17 @@ const KnowledgePage = () => {
         <button className="kn-icon-btn" aria-label="Back" onClick={() => goBackOr(navigate, "/settings")}>
           <ChevronLeft className="w-5 h-5" strokeWidth={2} />
         </button>
-        <h1 className="kn-title">Knowledge</h1>
+        <h1 className="kn-title">Memory</h1>
         <button className="kn-icon-btn" aria-label="Add knowledge" onClick={openSheet}>
           <Plus className="w-5 h-5" strokeWidth={2} />
         </button>
       </header>
 
       <section className="kn-main">
+        <div className="kn-section-head">
+          <h2>Knowledge</h2>
+          <p>Facts and instructions Megsy can remember and use in future chats.</p>
+        </div>
         {loading ? (
           <div className="kn-state">
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -225,6 +229,9 @@ const knCss = `
 .kn-icon-btn:active { transform: scale(0.94); }
 
 .kn-main { padding: 6px 14px 28px; }
+.kn-section-head { margin: 12px 2px 18px; }
+.kn-section-head h2 { margin: 0; font-size: 16px; font-weight: 650; }
+.kn-section-head p { margin: 5px 0 0; max-width: 520px; font-size: 12.5px; line-height: 1.5; color: hsl(var(--foreground) / 0.6); }
 .kn-state { display: grid; place-items: center; padding: 68px 0; color: hsl(var(--foreground) / 0.6); }
 
 .kn-empty {
@@ -328,4 +335,4 @@ const knCss = `
 @keyframes kn-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 `;
 
-export default KnowledgePage;
+export default MemoryPage;

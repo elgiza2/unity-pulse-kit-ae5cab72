@@ -11,7 +11,6 @@ import {
 } from "@/lib/integrationBackend";
 import { IntegrationLogo } from "@/components/chat/integrations/IntegrationRow";
 import { useUserLang } from "@/lib/authI18n";
-import appsReference from "@/assets/integrations-apps-reference.png.asset.json";
 import { Button } from "@/components/ui/button";
 
 /** Integrations — clean app-grid: icon on top, name below, like a phone home screen. */
@@ -73,15 +72,8 @@ export default function IntegrationsPage() {
 
   return (
     <div dir={ar ? "rtl" : "ltr"} className="min-h-[100dvh] bg-background text-foreground">
-      <header className="relative overflow-hidden border-b border-border">
-        <img
-          src={appsReference.url}
-          alt=""
-          className="absolute inset-0 h-full w-full scale-105 object-cover opacity-25 blur-sm"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-background/75" aria-hidden="true" />
-        <div className="relative mx-auto max-w-4xl px-4 pb-7 pt-4 sm:pb-9">
+      <header className="border-b border-border bg-card/40">
+        <div className="mx-auto max-w-4xl px-4 pb-7 pt-4 sm:pb-9">
           <div className="flex items-center gap-2">
             <Button
               onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/chat"))}
@@ -121,7 +113,7 @@ export default function IntegrationsPage() {
                 variant="ghost"
                 className="group h-auto min-w-0 flex-col gap-2.5 rounded-md px-1 py-2 text-center"
               >
-                <span className="relative grid h-16 w-16 place-items-center rounded-md border border-border bg-card shadow-sm transition-transform group-active:scale-95">
+                <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-md border border-border bg-card shadow-sm transition-transform group-active:scale-95">
                   <IntegrationLogo item={item} size={56} />
                   {busy === item.app ? (
                     <span className="absolute inset-0 grid place-items-center rounded-md bg-background/70">
