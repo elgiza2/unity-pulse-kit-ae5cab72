@@ -10,7 +10,10 @@ import { getRunwayVideoPolicy } from "@/lib/runwayModelPolicy";
 // Every image model goes through the deployed media router (`anything-api`),
 // which resolves the slug to DeAPI / Renderful / Runway. The legacy
 // `media-image` function only understood Runway slugs and rejected the rest.
-const IMAGE_FN = "anything-api";
+// One fixed image model for the whole app: GPT Image 2 on Runway (low quality),
+// served by the `media-image` function.
+const IMAGE_FN = "media-image";
+const FIXED_IMAGE_SLUG = "runway-gpt-image-2";
 
 // Video job pacing depends on the provider. Alibaba Wan runs ~5–6 min end
 // to end, so we show a visible countdown before polling. deAPI usually
@@ -125,9 +128,9 @@ async function generateImageScene(
       : [];
   // Never silently replace a requested Runway image with another provider.
   // Other models retain their existing fallback chain.
-  const attempts = modelSlug.startsWith("runway-") || modelSlug === "gen4_image_turbo"
-    ? [modelSlug]
-    : [modelSlug, ...IMAGE_FALLBACK_SLUGS.filter((s) => s !== modelSlug)];
+  void modelSlug;
+  void IMAGE_FALLBACK_SLUGS;
+  const attempts = [FIXED_IMAGE_SLUG];
   try {
     let lastErr: unknown = null;
     for (const slug of attempts) {
