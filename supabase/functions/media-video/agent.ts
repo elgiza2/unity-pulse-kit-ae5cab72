@@ -93,10 +93,11 @@ export async function handleAgent(
       } catch (e) {
         lastError = e instanceof Error ? e.message : lastError;
         const status = Number((e as any)?.providerStatus || 500);
-        await noteKeyFail(key, lastError, status);
-        if (status === 403 && /free plan|buy credits/i.test(lastError)) {
+        // Model/plan errors are config issues, not dead keys — never deplete for them.
+        if (status === 403 && /free plan|buy credits|not available/i.test(lastError)) {
           return out({ error: "agent_plan_locked" }, 402);
         }
+        await noteKeyFail(key, lastError, status);
         if (status === 400 || status === 422) break;
       }
     }
