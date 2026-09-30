@@ -94,6 +94,7 @@ export function DesktopSettingsHome() {
         // Mail is hidden until its UI is reworked.
         // { icon: (p) => <Mail {...p} />, label: tx("Mail"), path: "/mail" },
         { icon: (p) => <Brain {...p} />, label: tx("Memory"), path: "/settings/memory" },
+        { icon: (p) => <ListChecks {...p} />, label: tx("Tasks"), path: "/tasks" },
         { icon: IntegrationsIcon, label: tx("Integrations"), path: "/integrations" },
         { icon: IntegrationsIcon, label: tx("MCP Servers"), path: "/settings/mcp" },
 
