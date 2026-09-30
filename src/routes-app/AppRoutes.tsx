@@ -39,6 +39,7 @@ import {
   ReferralsDashboardTab,
   KPage,
   IntegrationsPage,
+  IntegrationDetailPage,
   ReferralResourcesPage,
   ReferralPartnerTestPage,
   // integrations hub
@@ -530,6 +531,7 @@ export const AppRoutes = ({ currentUserId }: { currentUserId: string | null }) =
     <Route path="/settings/general" element={<Navigate to="/settings" replace />} />
 
     <Route path="/integrations" element={<IntegrationsPage />} />
+    <Route path="/integrations/:app" element={<IntegrationDetailPage />} />
     <Route path="/integration" element={<Navigate to="/integrations" replace />} />
     <Route path="/settings/help" element={<Navigate to="/settings/support/help" replace />} />
 

@@ -7,6 +7,7 @@
  * produced (text + files) once it is finished.
  */
 import { useEffect, useRef, useState } from "react";
+import { Globe } from "lucide-react";
 import {
   computerErrorMessage,
   loadStoredComputerTask,
@@ -58,6 +59,8 @@ export default function ComputerTaskCard({ taskId }: Props) {
   const labels = isAr
     ? {
         run: "تشغيل المعاينة",
+        open: "معاينة",
+        download: "تحميل",
         tap: "اضغط للمعاينة",
         timedOut: "المهمة استغرقت وقتًا أطول من المتوقع وتم إيقافها.",
         failed: "المهمة على الكمبيوتر اتوقفت قبل ما تخلص. جرّب تبعتها تاني بصيغة أوضح.",
@@ -65,6 +68,8 @@ export default function ComputerTaskCard({ taskId }: Props) {
       }
     : {
         run: "Open preview",
+        open: "Preview",
+        download: "Download",
         tap: "Tap to preview",
         timedOut: "This task ran longer than expected and was stopped.",
         failed: "The computer task stopped before finishing. Try sending it again more clearly.",
@@ -181,7 +186,40 @@ export default function ComputerTaskCard({ taskId }: Props) {
   if (running) {
     const live = events.at(-1);
     // Mirror the provider: show its own internal reasoning when it streams it.
-    return <AgentThinkingLine text={live?.detail || live?.title || task?.progress} />;
+    const status = live?.detail || live?.title || task?.progress;
+    if (!liveUrl) return <AgentThinkingLine text={status} />;
+    return (
+      <div className="my-4 max-w-md overflow-hidden rounded-[26px] bg-card p-3 ring-1 ring-border/60">
+        <div className="flex items-center gap-3 px-1 pb-3 pt-1">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary">
+            <Globe className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[14px] font-semibold text-foreground">{isAr ? "المتصفح" : "Browser"}</span>
+            <span className="ai-shimmer block truncate text-[12.5px]">{status || (isAr ? "بيشتغل…" : "Working…")}</span>
+          </span>
+        </div>
+        <div className="aspect-video overflow-hidden rounded-2xl bg-muted">
+          <iframe src={liveUrl} title="Browser" className="pointer-events-none h-full w-full border-0" />
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => window.open(liveUrl.replace(/[?&]view_only=true/, ""), "_blank", "noopener,noreferrer")}
+            className="h-11 rounded-full bg-primary text-[13.5px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            {isAr ? "افتح المتصفح" : "Open browser"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void stopComputerTask(taskId).catch(() => undefined)}
+            className="h-11 rounded-full bg-muted text-[13.5px] font-semibold text-foreground transition-colors hover:bg-muted/70"
+          >
+            {isAr ? "إيقاف" : "Stop"}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // The provider often hands back its own raw payload (JSON, "Final result:",
@@ -239,8 +277,13 @@ export default function ComputerTaskCard({ taskId }: Props) {
     }
   };
 
+  // Muse-style actions: when the agent ends on a question, offer one-tap replies.
+  const quickReplies = /[?؟]\s*$/.test((resultText || "").trim())
+    ? isAr ? ["أيوه، كمّل", "لا، شكرًا"] : ["Yes, go ahead", "No, thanks"]
+    : [];
+
   const fileGrid =
-    files.length > 0 ? (
+    files.length > 0 || quickReplies.length > 0 ? (
       <div className="mt-3 space-y-2.5">
         {htmlFile ? (
           <button
@@ -251,42 +294,69 @@ export default function ComputerTaskCard({ taskId }: Props) {
             {labels.run}
           </button>
         ) : null}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
+        <div className="grid grid-cols-1 gap-3">
         {files.map((f) => {
           const isImage =
             /\.(png|jpe?g|webp|gif|avif)$/i.test(f.url) || !!f.type?.startsWith("image/");
           const isVideo = /\.(mp4|webm|mov)$/i.test(f.url) || !!f.type?.startsWith("video/");
           const ext = (f.name.split(".").pop() || "file").toLowerCase().slice(0, 4);
+          const open = () => openPreview({ url: f.url, name: f.name, type: f.type });
           return (
-            <button
-              key={f.url}
-              type="button"
-              onClick={() => openPreview({ url: f.url, name: f.name, type: f.type })}
-              title={f.name}
-              className="group flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-border/50 bg-foreground/[0.03] p-3 text-start transition-colors hover:bg-foreground/[0.07]"
-            >
-              <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary/10">
-                {isImage ? (
-                  <img src={f.url} alt="" loading="lazy" className="h-full w-full object-cover" />
-                ) : isVideo ? (
-                  <span className="text-[10px] font-semibold uppercase text-primary">vid</span>
-                ) : (
-                  <span className="text-[11px] font-semibold uppercase text-primary">{ext}</span>
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium text-foreground">
-                  {f.name}
+            <div key={f.url} className="max-w-md overflow-hidden rounded-[24px] bg-card p-2.5 ring-1 ring-border/60">
+              {(isImage || isVideo) && (
+                <button type="button" onClick={open} className="block w-full overflow-hidden rounded-2xl bg-muted">
+                  {isImage ? (
+                    <img src={f.url} alt={f.name} loading="lazy" className="max-h-72 w-full object-cover" />
+                  ) : (
+                    <video src={f.url} muted playsInline preload="metadata" className="max-h-72 w-full object-cover" />
+                  )}
+                </button>
+              )}
+              <div className="flex items-center gap-3 px-1.5 py-2">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/15 text-[11px] font-bold uppercase text-primary">
+                  {ext}
                 </span>
-                <span className="block text-[11.5px] text-muted-foreground">
-                  {labels.tap}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-semibold text-foreground">{f.name}</span>
+                  <span className="block text-[12px] uppercase text-muted-foreground">{ext}</span>
                 </span>
-              </span>
-            </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={open}
+                  className="h-10 rounded-full bg-primary text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  {labels.open}
+                </button>
+                <a
+                  href={f.url}
+                  download={f.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid h-10 place-items-center rounded-full bg-muted text-[13px] font-semibold text-foreground transition-colors hover:bg-muted/70"
+                >
+                  {labels.download}
+                </a>
+              </div>
+            </div>
           );
         })}
         </div>
+        {quickReplies.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {quickReplies.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("megsy:prefill-composer", { detail: { text: q } }))}
+                className="h-10 rounded-full bg-primary px-5 text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     ) : null;
 
