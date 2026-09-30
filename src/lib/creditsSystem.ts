@@ -22,6 +22,10 @@ export interface CreditOverview {
   tasksToday: number;
   spentThisMonth: number;
   freeToday: Record<string, number>;
+  dailyCredits: number;
+  bonusCredits: number;
+  planCredits: number;
+  purchasedCredits: number;
 }
 
 const CLAIM_KEY = "megsy_daily_credits_claimed_on";
@@ -69,5 +73,9 @@ export async function fetchCreditOverview(): Promise<CreditOverview | null> {
     tasksToday: Number(d.tasks_today ?? 0),
     spentThisMonth: Number(d.spent_this_month ?? 0),
     freeToday: (d.free_today as Record<string, number>) ?? {},
+    dailyCredits: Number(d.daily_credits ?? 0),
+    bonusCredits: Number(d.bonus_credits ?? 0),
+    planCredits: Number(d.plan_credits ?? 0),
+    purchasedCredits: Number(d.purchased_credits ?? 0),
   };
 }

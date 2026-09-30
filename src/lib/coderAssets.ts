@@ -14,7 +14,7 @@ import type { ProjectFile } from "@/lib/extractProjectFiles";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/edgeRuntime";
 
 export const IMAGE_CREDITS = 2;
-export const VIDEO_CREDITS = 12;
+export const VIDEO_CREDITS = 25;
 
 export type CoderAssetKind = "image" | "video";
 
@@ -108,11 +108,12 @@ export async function generateCoderImage(
   prompt: string,
   opts: { referenceImageUrl?: string; signal?: AbortSignal } = {},
 ): Promise<string> {
-  const resp = await fetch(fnUrl("anything-api"), {
+  const resp = await fetch(fnUrl("media-video"), {
     method: "POST",
     headers: await authHeaders(),
     signal: opts.signal,
     body: JSON.stringify({
+      kind: "image",
       prompt: `${prompt}. High quality, web-ready, clean composition, no text watermarks.`,
       size: "1024x1024",
       ...(opts.referenceImageUrl
