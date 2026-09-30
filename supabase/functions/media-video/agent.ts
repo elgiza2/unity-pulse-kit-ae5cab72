@@ -6,9 +6,10 @@ import { noteKeyAttempt, noteKeyFail, noteKeyOk, vaultKeys } from "./_shared/key
 
 // v4 "runs" API: the only one where DeepSeek (UI name "DeepSeek V4.1 Flash") is free-plan.
 const BU = "https://api.browser-use.com/api/v4";
-const LLM = "deepseek-v4-flash-vision";
-// Free-plan models used while DeepSeek is locked on the account (auto-returns to DeepSeek after top-up).
-const FREE_FALLBACKS = ["browser-use-llm", "bu-2-0-mini-preview", "gemini-2.5-flash"];
+// v4 accepts "deepseek-v4.1-flash" (the dashboard's free "DeepSeek V4.1 Flash").
+const LLM = "deepseek-v4.1-flash";
+// Tried only if the main model is locked on the account.
+const FREE_FALLBACKS = ["deepseek-v4-flash-vision", "glm-5.3-flash", "mimo-v2.6-flash"];
 const PROVIDER = "browser-use";
 
 const SYSTEM = `You are Megsy, a general-purpose agent. Decide yourself what the task needs.
