@@ -37,6 +37,9 @@ export default {
           blush: "hsl(var(--brand-blush))",        // #FFB3D1
           muted: "hsl(var(--brand-muted))",        // #8A8A8A
         },
+        "brand-from": "hsl(var(--brand-from))",
+        "brand-to": "hsl(var(--brand-to))",
+        "brand-foreground": "hsl(var(--brand-foreground))",
         surface: {
           1: "hsl(var(--surface-1))", // #161616
           2: "hsl(var(--surface-2))", // #1A1A1A

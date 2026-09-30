@@ -171,6 +171,11 @@ html.lenis body {
   --brand-midnight: 0 0% 0%;       /* #000000 */
   --brand-smoke: 240 5% 90%;      /* #e5e5e7 */
 
+  /* Warm brand gradient (pink → amber) used by settings/usage/integrations pages */
+  --brand-from: 340 72% 52%;
+  --brand-to: 32 95% 55%;
+  --brand-foreground: 0 0% 100%;
+
   /* ── Overlay tokens (glass/sidebar/profile shell) ─────────────
      Centralized rgba constants so we don't scatter hex/rgba in TSX.
      Naming: --overlay-{white|black}-{opacity*100}. */
