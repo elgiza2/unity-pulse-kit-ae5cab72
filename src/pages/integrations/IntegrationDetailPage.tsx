@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Plus, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, ShieldCheck, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { integrations as CATALOG } from "@/lib/integrationsData";
 import {
@@ -94,40 +94,55 @@ export default function IntegrationDetailPage() {
           type="button"
           onClick={() => navigate("/integrations", { replace: true })}
           aria-label="Back"
-          className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
+          className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-muted"
         >
           <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
         </button>
 
-        <div className="mt-8 flex flex-col items-center text-center">
-          <span className="grid h-20 w-20 place-items-center rounded-[24px] bg-card ring-1 ring-border/60">
-            <IntegrationLogo item={item} size={46} />
+        {/* Hero */}
+        <div className="megsy-brand-soft relative mt-6 flex flex-col items-center overflow-hidden rounded-[32px] px-6 pb-8 pt-10 text-center ring-1 ring-border/50">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-20 end-4 h-48 w-48 rounded-full bg-brand-to/25 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-16 start-0 h-40 w-40 rounded-full bg-brand-from/20 blur-3xl"
+          />
+          <span className="relative grid h-24 w-24 place-items-center rounded-[28px] bg-card shadow-xl shadow-brand-from/15 ring-1 ring-border/60">
+            <IntegrationLogo item={item} size={54} />
           </span>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight">{item.name}</h1>
-          <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">{item.description}</p>
-          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-            <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-primary" : "bg-muted-foreground/50"}`} />
+          <h1 className="relative mt-5 text-[26px] font-bold tracking-tight">{item.name}</h1>
+          <p className="relative mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+          <span
+            className={`relative mt-4 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold ${
+              on ? "megsy-brand shadow-md shadow-brand-from/25" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-brand-foreground" : "bg-muted-foreground/50"}`} />
             {loading ? "…" : on ? (ar ? "متصل" : "Connected") : ar ? "غير متصل" : "Not connected"}
           </span>
         </div>
 
-        <section className="mt-10">
-          <h2 className="mb-3 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <section className="mt-8">
+          <h2 className="mb-3 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {ar ? "الحسابات" : "Accounts"}
           </h2>
-          <div className="overflow-hidden rounded-3xl bg-card ring-1 ring-border/60">
+          <div className="overflow-hidden rounded-[24px] bg-card ring-1 ring-border/60">
             {loading ? (
               <div className="grid h-16 place-items-center"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
             ) : on ? (
               <div className="flex items-center gap-3 px-4 py-3.5">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-muted"><UserRound className="h-4 w-4 text-muted-foreground" /></span>
+                <span className="megsy-brand-soft grid h-10 w-10 place-items-center rounded-full text-foreground">
+                  <UserRound className="h-4.5 w-4.5" />
+                </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">{accountName}</span>
                 <button
                   type="button"
                   onClick={() => void disconnect()}
                   disabled={!!busy}
                   aria-label={ar ? "فصل" : "Disconnect"}
-                  className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                  className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                 >
                   {busy === "disconnect" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                 </button>
@@ -141,9 +156,9 @@ export default function IntegrationDetailPage() {
               type="button"
               onClick={() => void connect()}
               disabled={!!busy}
-              className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3.5 text-start text-sm font-medium text-primary hover:bg-muted/50 disabled:opacity-50"
+              className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3.5 text-start text-sm font-semibold transition-colors hover:bg-muted/50 disabled:opacity-50"
             >
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/10">
+              <span className="megsy-brand grid h-9 w-9 place-items-center rounded-full shadow-sm shadow-brand-from/25">
                 {busy === "connect" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               </span>
               {on ? (ar ? "إضافة حساب تاني" : "Add another account") : ar ? `ربط ${item.name}` : `Connect ${item.name}`}
@@ -151,8 +166,11 @@ export default function IntegrationDetailPage() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-3xl bg-card px-5 py-4 ring-1 ring-border/60">
-          <h3 className="text-sm font-medium">{ar ? "ميغسي بيستخدمه إزاي" : "How Megsy uses it"}</h3>
+        <section className="mt-4 rounded-[24px] bg-card px-5 py-4 ring-1 ring-border/60">
+          <h3 className="flex items-center gap-2 text-sm font-semibold">
+            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+            {ar ? "ميغسي بيستخدمه إزاي" : "How Megsy uses it"}
+          </h3>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
             {ar
               ? "لما تطلب حاجة محتاجة التطبيق ده، ميغسي بيستخدم حسابك المربوط تلقائيًا، وبيسألك قبل أي خطوة مهمة."

@@ -70,14 +70,14 @@ export default function LanguagePage() {
           type="button"
           aria-label="Back"
           onClick={() => navigate("/settings", { replace: true })}
-          className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
+          className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-muted"
         >
           <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
         </button>
-        <h1 className="mt-6 text-[30px] font-semibold tracking-tight">{tx("Language")}</h1>
+        <h1 className="mt-6 text-[30px] font-bold tracking-tight">{tx("Language")}</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">{tx("Pick how Megsy talks to you.")}</p>
 
-        <div className="mt-8 grid grid-cols-2 gap-3">
+        <div className="mt-8 grid grid-cols-2 gap-4">
           {AVAILABLE_LANGS.map((l, i) => {
             const Flag = FLAGS[l.code] ?? FlagGB;
             const active = lang === l.code;
@@ -90,24 +90,26 @@ export default function LanguagePage() {
                 transition={{ delay: i * 0.06, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => pick(l.code as AuthLang)}
-                className={`relative flex flex-col items-center rounded-[28px] bg-card px-4 pb-5 pt-6 ring-1 transition-shadow ${
-                  active ? "ring-2 ring-primary" : "ring-border/60 hover:ring-border"
+                className={`relative flex flex-col items-center rounded-[32px] px-4 pb-6 pt-7 transition-all ${
+                  active
+                    ? "megsy-brand-soft shadow-lg shadow-brand-from/15 ring-2 ring-brand-from"
+                    : "bg-card ring-1 ring-border/60 hover:ring-border"
                 }`}
               >
                 {active && (
-                  <span className="absolute end-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
+                  <span className="megsy-brand absolute end-3 top-3 grid h-6 w-6 place-items-center rounded-full shadow">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </span>
                 )}
                 <motion.span
-                  className="block h-20 w-24"
+                  className="block h-24 w-28 drop-shadow-md"
                   animate={active ? { rotate: [0, -4, 3, 0] } : { rotate: 0 }}
                   transition={{ duration: 1.6, repeat: active ? Infinity : 0, ease: "easeInOut" }}
                   style={{ transformOrigin: "10% 90%" }}
                 >
                   <Flag />
                 </motion.span>
-                <span className="mt-4 text-[16px] font-semibold">{l.native}</span>
+                <span className="mt-4 text-[17px] font-bold">{l.native}</span>
                 <span className="mt-0.5 text-[12.5px] text-muted-foreground">{l.label}</span>
               </motion.button>
             );
