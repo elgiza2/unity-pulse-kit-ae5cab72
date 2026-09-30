@@ -85,7 +85,7 @@ export function DesktopChatHeader(props: DesktopChatHeaderProps) {
         ) : null}
       </div>
 
-      <div className="hidden md:block">
+      <div className="hidden">
         <ComposerModelMenu
           mode={chatMode}
           open={props.tierMenuOpen}

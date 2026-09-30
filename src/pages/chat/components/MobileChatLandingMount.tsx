@@ -109,16 +109,9 @@ export function MobileChatLandingMount(props: MobileChatLandingMountProps) {
         setInput(s.label);
       }}
       modelControlSlot={undefined}
-      modeBarSlot={
-        hasMobileServicePanel ? (
-          renderMobileServicePanel()
-        ) : (
-          <MobileModeBar
-            mode={selectedAgent?.id === "docs" ? "docs" : (chatMode as any)}
-            onChange={onModeBarChange}
-          />
-        )
-      }
+      modeBarSlot={undefined}
+      chips={[]}
+      suggestions={[]}
       onChipClick={(id: LandingChipId) => {
         if (id === "image") {
           handleModeChange("images" as ChatMode);

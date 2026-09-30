@@ -234,10 +234,7 @@ export function ChatComposerSection(props: ChatComposerSectionProps) {
               />
             )}
 
-            <ComposerMobileModeBar
-              {...(composerMobileModeBarProps as any)}
-              forceHidden={!effectiveModesShown}
-            />
+            {/* Mode bar removed: the single agent picks its own tools. */}
 
             {isDesktopLanding && desktopGreeting ? (
               <div className="hidden md:flex justify-center mb-8">{desktopGreeting}</div>
@@ -246,7 +243,7 @@ export function ChatComposerSection(props: ChatComposerSectionProps) {
             {/* Mode chips row removed by design: modes live in the + menu. */}
 
             <AnimatePresence initial={false} mode="popLayout">
-              {starterChipsVisible ? (
+              {false && starterChipsVisible ? (
                 <StarterCards
                   key="starter-chips"
                   className="mt-1 mb-1.5"
@@ -271,7 +268,6 @@ export function ChatComposerSection(props: ChatComposerSectionProps) {
                 <ComposerAnimatedInput
                 {...(composerAnimatedInputProps as any)}
                 
-                modesToggleVisible
                 modesShown={effectiveModesShown}
                 onToggleModes={() => setModesShown((v) => !v)}
                 chatContext
@@ -316,7 +312,7 @@ export function ChatComposerSection(props: ChatComposerSectionProps) {
               </div>
 
               {/* Desktop-only starter chips below the composer (icons, no images). */}
-              {starterChipsVisible ? (
+              {false && starterChipsVisible ? (
                 <StarterChips
                   className="mt-3 pointer-events-auto"
                   onPick={(_prompt, mode) => {

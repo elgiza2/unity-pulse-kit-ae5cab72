@@ -138,8 +138,8 @@ export function MobileChatHeaderMount(props: MobileChatHeaderMountProps) {
       chatUserId={chatUserId}
       scrollContainerRef={scrollContainerRef}
       modelSlot={
-
-        !isMobile ? null : (
+        // Model picker removed: one agent, fixed models.
+        true ? null : (
           <ComposerModelMenu
             mode={chatMode}
             open={tierMenuOpen}
