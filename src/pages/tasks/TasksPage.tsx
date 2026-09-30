@@ -5,6 +5,8 @@ import { AlarmClock, ArrowLeft, Bell, Check, Loader2, Plus, Trash2, X } from "lu
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserLang } from "@/lib/authI18n";
+import { cancelNativeTask, isNativeApp, syncNativeTask } from "@/lib/native/bridge";
+import MorningPlanCard from "@/components/life/MorningPlanCard";
 
 type Goal = { id: string; title: string; done: boolean };
 type Task = {
@@ -36,7 +38,7 @@ const T = {
     done: "Done",
     byMegsy: "By Megsy",
     failed: "Could not save",
-    alarmSoon: "Phone alarms turn on with the Android app. For now you'll get a notification.",
+    alarmSoon: "Open Megsy on your Android phone to set this as a real alarm.",
   },
   ar: {
     title: "المهام",
@@ -55,7 +57,7 @@ const T = {
     done: "خلصت",
     byMegsy: "من ميغسي",
     failed: "مقدرناش نحفظ",
-    alarmSoon: "منبهات الموبايل هتشتغل مع تطبيق أندرويد. دلوقتي هيوصلك إشعار.",
+    alarmSoon: "افتح ميغسي من تطبيق الأندرويد عشان يتضبط كمنبه حقيقي.",
   },
 };
 
@@ -157,7 +159,7 @@ export default function TasksPage() {
       toast.error(t.failed);
       return;
     }
-    if (alarm) toast(t.alarmSoon);
+    if (alarm && !isNativeApp()) toast(t.alarmSoon);
     if (when && "Notification" in window && Notification.permission === "default") void Notification.requestPermission();
     setSheet(null);
     setText("");
@@ -235,6 +237,8 @@ export default function TasksPage() {
               ))}
             </ul>
           </section>
+
+          <MorningPlanCard ar={ar} />
 
           {/* Tasks */}
           <section className="rounded-[28px] bg-card p-6 ring-1 ring-border/60">
