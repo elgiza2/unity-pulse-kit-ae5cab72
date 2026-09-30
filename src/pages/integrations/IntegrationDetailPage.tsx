@@ -100,26 +100,18 @@ export default function IntegrationDetailPage() {
         </button>
 
         {/* Hero */}
-        <div className="megsy-brand-soft relative mt-6 flex flex-col items-center overflow-hidden rounded-[32px] px-6 pb-8 pt-10 text-center ring-1 ring-border/50">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-20 end-4 h-48 w-48 rounded-full bg-brand-to/25 blur-3xl"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-16 start-0 h-40 w-40 rounded-full bg-brand-from/20 blur-3xl"
-          />
-          <span className="relative grid h-24 w-24 place-items-center rounded-[28px] bg-card shadow-xl shadow-brand-from/15 ring-1 ring-border/60">
+        <div className="relative mt-6 flex flex-col items-center rounded-[32px] bg-card px-6 pb-8 pt-10 text-center ring-1 ring-border/60">
+          <span className="relative grid h-24 w-24 place-items-center rounded-[28px] bg-background ring-1 ring-border/60">
             <IntegrationLogo item={item} size={54} />
           </span>
           <h1 className="relative mt-5 text-[26px] font-bold tracking-tight">{item.name}</h1>
           <p className="relative mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">{item.description}</p>
           <span
             className={`relative mt-4 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              on ? "megsy-brand shadow-md shadow-brand-from/25" : "bg-muted text-muted-foreground"
+              on ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-brand-foreground" : "bg-muted-foreground/50"}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-background" : "bg-muted-foreground/50"}`} />
             {loading ? "…" : on ? (ar ? "متصل" : "Connected") : ar ? "غير متصل" : "Not connected"}
           </span>
         </div>
@@ -133,7 +125,7 @@ export default function IntegrationDetailPage() {
               <div className="grid h-16 place-items-center"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
             ) : on ? (
               <div className="flex items-center gap-3 px-4 py-3.5">
-                <span className="megsy-brand-soft grid h-10 w-10 place-items-center rounded-full text-foreground">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground">
                   <UserRound className="h-4.5 w-4.5" />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">{accountName}</span>
@@ -158,7 +150,7 @@ export default function IntegrationDetailPage() {
               disabled={!!busy}
               className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3.5 text-start text-sm font-semibold transition-colors hover:bg-muted/50 disabled:opacity-50"
             >
-              <span className="megsy-brand grid h-9 w-9 place-items-center rounded-full shadow-sm shadow-brand-from/25">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-foreground text-background">
                 {busy === "connect" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               </span>
               {on ? (ar ? "إضافة حساب تاني" : "Add another account") : ar ? `ربط ${item.name}` : `Connect ${item.name}`}

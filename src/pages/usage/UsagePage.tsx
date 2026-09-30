@@ -146,31 +146,23 @@ export default function UsagePage() {
           >
             <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
           </button>
-          <span className="megsy-brand-soft rounded-full px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-foreground">
+          <span className="rounded-full bg-muted px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-foreground">
             {paid ? plan : ar ? "مجاني" : "Free"}
           </span>
         </div>
 
         {/* Balance hero */}
-        <section className="megsy-brand relative mt-6 overflow-hidden rounded-[32px] px-6 pb-7 pt-8 text-center shadow-xl shadow-brand-from/20">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -end-16 -top-20 h-56 w-56 rounded-full bg-white/15 blur-2xl"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-24 -start-10 h-48 w-48 rounded-full bg-black/10 blur-2xl"
-          />
-          <p className="relative text-[13px] font-medium text-brand-foreground/85">
+        <section className="relative mt-6 rounded-[32px] bg-foreground px-6 pb-7 pt-8 text-center text-background">
+          <p className="text-[13px] font-medium opacity-80">
             {ar ? "رصيدك" : "Your credits"}
           </p>
-          <p className="relative mt-2 text-[56px] font-bold leading-none tracking-tight tabular-nums">
+          <p className="mt-2 text-[56px] font-bold leading-none tracking-tight tabular-nums">
             {ov ? fmt(ov.credits) : "—"}
           </p>
           <button
             type="button"
             onClick={() => navigate("/pricing")}
-            className="relative mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-brand-foreground px-6 text-[14px] font-bold text-foreground shadow-lg transition-transform hover:scale-[1.03] active:scale-95"
+            className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-background px-6 text-[14px] font-bold text-foreground transition-transform hover:scale-[1.03] active:scale-95"
           >
             <Sparkles className="h-4 w-4" />
             {paid ? (ar ? "إدارة الاشتراك" : "Manage plan") : ar ? "ترقية" : "Upgrade"}
@@ -187,7 +179,7 @@ export default function UsagePage() {
           </div>
           <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
             <div
-              className="megsy-brand h-full rounded-full transition-all"
+              className="h-full rounded-full bg-foreground transition-all"
               style={{ width: `${Math.max(usedPct, ov && ov.spentToday > 0 ? 3 : 0)}%` }}
             />
           </div>
@@ -226,7 +218,7 @@ export default function UsagePage() {
                     const label = LABELS[kind][ar ? 1 : 0];
                     return (
                       <div key={it.id} className="flex items-center gap-3 px-4 py-3">
-                        <span className="megsy-brand-soft grid h-9 w-9 shrink-0 place-items-center rounded-xl text-foreground">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-muted text-foreground">
                           <Icon className="h-4 w-4" />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -236,7 +228,7 @@ export default function UsagePage() {
                           </span>
                         </span>
                         <span
-                          className={`text-[14px] font-bold tabular-nums ${grant ? "megsy-brand-text" : "text-foreground"}`}
+                          className="text-[14px] font-bold tabular-nums text-foreground"
                         >
                           {grant ? "+" : "−"}
                           {fmt(Math.abs(amount))}

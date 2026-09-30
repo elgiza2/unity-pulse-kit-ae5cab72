@@ -184,14 +184,14 @@ export default function MemoryPage() {
           <button
             type="button"
             onClick={() => setDraft({ name: "", use_when: "", content: "" })}
-            className="megsy-brand inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[13px] font-bold shadow-md shadow-brand-from/25 transition-transform hover:scale-[1.03] active:scale-95"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-bold text-background transition-transform hover:scale-[1.03] active:scale-95"
           >
             <Plus className="h-4 w-4" /> {t.add}
           </button>
         </div>
 
         <div className="mt-6 flex items-center gap-3">
-          <span className="megsy-brand grid h-12 w-12 shrink-0 place-items-center rounded-2xl shadow-md shadow-brand-from/25">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-muted">
             <Brain className="h-6 w-6" />
           </span>
           <div>
@@ -218,20 +218,16 @@ export default function MemoryPage() {
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : rows.length === 0 ? (
-            <div className="megsy-brand-soft relative flex flex-col items-center overflow-hidden rounded-[32px] px-6 py-14 text-center ring-1 ring-border/50">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -top-16 end-8 h-40 w-40 rounded-full bg-brand-to/20 blur-2xl"
-              />
-              <span className="megsy-brand grid h-16 w-16 place-items-center rounded-[22px] shadow-lg shadow-brand-from/30">
-                <Sparkles className="h-7 w-7" />
+            <div className="flex flex-col items-center rounded-[32px] bg-card px-6 py-14 text-center ring-1 ring-border/60">
+              <span className="grid h-16 w-16 place-items-center rounded-[22px] bg-muted">
+                <Sparkles className="h-7 w-7 text-muted-foreground" />
               </span>
               <p className="mt-5 text-[16px] font-bold">{t.empty}</p>
               <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-muted-foreground">{t.emptySub}</p>
               <button
                 type="button"
                 onClick={() => setDraft({ name: "", use_when: "", content: "" })}
-                className="megsy-brand mt-6 inline-flex h-11 items-center gap-1.5 rounded-full px-6 text-[14px] font-bold shadow-md shadow-brand-from/25 transition-transform hover:scale-[1.03] active:scale-95"
+                className="mt-6 inline-flex h-11 items-center gap-1.5 rounded-full bg-foreground px-6 text-[14px] font-bold text-background transition-transform hover:scale-[1.03] active:scale-95"
               >
                 <Plus className="h-4 w-4" /> {t.add}
               </button>
@@ -245,7 +241,7 @@ export default function MemoryPage() {
                   key={r.id}
                   className={`flex items-start gap-3 rounded-[24px] bg-card p-4 ring-1 ring-border/60 transition-opacity ${r.enabled ? "" : "opacity-60"}`}
                 >
-                  <span className="megsy-brand-soft mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-foreground">
+                  <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-foreground">
                     <Brain className="h-4.5 w-4.5" />
                   </span>
                   <button
@@ -265,7 +261,7 @@ export default function MemoryPage() {
                     aria-checked={r.enabled}
                     aria-label={r.enabled ? t.on : t.off}
                     onClick={() => toggle(r)}
-                    className={`relative mt-1.5 h-6 w-10 shrink-0 rounded-full transition-colors ${r.enabled ? "megsy-brand" : "bg-muted"}`}
+                    className={`relative mt-1.5 h-6 w-10 shrink-0 rounded-full transition-colors ${r.enabled ? "bg-foreground" : "bg-muted"}`}
                   >
                     <span
                       className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all ${
@@ -298,7 +294,7 @@ export default function MemoryPage() {
                 type="button"
                 onClick={save}
                 disabled={saving}
-                className="megsy-brand h-9 rounded-full px-4 text-[13px] font-bold disabled:opacity-60"
+                className="h-9 rounded-full bg-foreground px-4 text-[13px] font-bold text-background disabled:opacity-60"
               >
                 {saving ? t.saving : t.save}
               </button>

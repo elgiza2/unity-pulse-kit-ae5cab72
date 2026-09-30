@@ -92,12 +92,12 @@ export default function LanguagePage() {
                 onClick={() => pick(l.code as AuthLang)}
                 className={`relative flex flex-col items-center rounded-[32px] px-4 pb-6 pt-7 transition-all ${
                   active
-                    ? "megsy-brand-soft shadow-lg shadow-brand-from/15 ring-2 ring-brand-from"
+                    ? "bg-card ring-2 ring-foreground"
                     : "bg-card ring-1 ring-border/60 hover:ring-border"
                 }`}
               >
                 {active && (
-                  <span className="megsy-brand absolute end-3 top-3 grid h-6 w-6 place-items-center rounded-full shadow">
+                  <span className="absolute end-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-foreground text-background shadow">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </span>
                 )}
