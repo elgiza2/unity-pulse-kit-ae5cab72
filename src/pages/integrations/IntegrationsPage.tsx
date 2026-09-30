@@ -37,8 +37,8 @@ export default function IntegrationsPage() {
           className="group flex min-w-0 flex-col items-center gap-2 outline-none"
         >
           <span
-            className={`grid h-[60px] w-[60px] place-items-center rounded-[18px] bg-card ring-1 transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-brand-from/15 group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-ring ${
-              connected[item.app] ? "ring-brand-from/40" : "ring-border/60"
+            className={`grid h-[60px] w-[60px] place-items-center rounded-[18px] bg-card ring-1 transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-ring ${
+              connected[item.app] ? "ring-foreground/40" : "ring-border/60"
             }`}
           >
             <IntegrationLogo item={item} size={34} />
