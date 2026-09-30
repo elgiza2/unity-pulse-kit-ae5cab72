@@ -36,11 +36,8 @@ export default function IntegrationsPage() {
           onClick={() => navigate(`/integrations/${encodeURIComponent(item.app)}`)}
           className="group flex min-w-0 flex-col items-center gap-2 outline-none"
         >
-          <span className="relative grid h-[60px] w-[60px] place-items-center rounded-[18px] bg-card ring-1 ring-border/60 transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-ring">
+          <span className="grid h-[60px] w-[60px] place-items-center rounded-[18px] bg-card ring-1 ring-border/60 transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-ring">
             <IntegrationLogo item={item} size={34} />
-            {connected[item.app] && (
-              <span className="absolute -top-0.5 -end-0.5 h-3 w-3 rounded-full bg-primary ring-2 ring-background" />
-            )}
           </span>
           <span className="w-full truncate text-center text-[11.5px] text-foreground/75">{item.name}</span>
         </button>
