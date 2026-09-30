@@ -53,6 +53,19 @@ export default function ComputerTaskCard({ taskId }: Props) {
     }
   }, [taskId]);
   const navigate = useNavigate();
+  const lang0 = useUserLang();
+  useEffect(() => {
+    if (task?.status !== "completed" && task?.status !== "done") return;
+    const { actions } = extractLifeActions(task?.result_text || "");
+    if (!actions.length) return;
+    void saveLifeActions(taskId, actions).then((ok) => {
+      if (!ok) return;
+      const ar = lang0 === "ar-eg";
+      toast(ar ? "اتضاف للمهام" : "Added to your tasks", {
+        action: { label: ar ? "افتح" : "Open", onClick: () => navigate("/tasks") },
+      });
+    });
+  }, [task?.status, task?.result_text, taskId, lang0, navigate]);
   // Files open on their own full page (/file-preview/:id) instead of an overlay
   // stacked on the conversation, so the viewer is clean and shareable.
   const openPreview = (file: { url: string; name: string; type?: string | null }) => {
