@@ -107,3 +107,10 @@
 - [x] Integrations now live only on `/integrations`; chat triggers navigate there instead of opening a sheet.
 - [x] Provider thinking output streams into the Megsy-star status line and persists with task events.
 - [x] Knowledge moved inside the Memory page; notification pages and settings entries were removed.
+
+## Life assistant (Sep 30 2026)
+- [x] Tasks page /tasks (goals, tasks, ideas), agent [[TASK/ALARM/GOAL]] lines saved to life_* tables
+- [x] In-app reminders (ReminderWatcher polls scheduled_nudges)
+- [ ] Google Calendar per-user connection (needs Google OAuth client approval)
+- [ ] Background push reminders + daily brief when app is closed (needs push setup + scheduler)
+- [ ] Android wrapper: real phone alarms (Capacitor)
