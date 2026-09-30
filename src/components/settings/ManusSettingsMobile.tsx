@@ -23,7 +23,7 @@ import {
   Mail as MailIcon,
   Monitor,
 } from "lucide-react";
-import { KeyRound } from "lucide-react";
+import { KeyRound, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useConfirm } from "@/components/common/ConfirmDialog";
 import { useActiveAccount } from "@/hooks/useActiveAccount";
