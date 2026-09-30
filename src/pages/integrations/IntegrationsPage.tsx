@@ -1,139 +1,98 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Loader2, Search } from "lucide-react";
-import { toast } from "sonner";
-import { integrations as CATALOG, type Integration } from "@/lib/integrationsData";
-import {
-  loadIntegrationConnections,
-  startIntegrationConnection,
-  disconnectIntegration,
-  waitForConnectionRefresh,
-} from "@/lib/integrationBackend";
+import { ArrowLeft, Search } from "lucide-react";
+import { integrations as CATALOG } from "@/lib/integrationsData";
+import { loadIntegrationConnections } from "@/lib/integrationBackend";
 import { IntegrationLogo } from "@/components/chat/integrations/IntegrationRow";
 import { useUserLang } from "@/lib/authI18n";
-import { Button } from "@/components/ui/button";
 
-/** Integrations — clean app-grid: icon on top, name below, like a phone home screen. */
+/** Apps — a quiet home-screen grid. Tapping an app opens its own manage page. */
 export default function IntegrationsPage() {
   const navigate = useNavigate();
-  const lang = useUserLang();
-  const ar = lang === "ar-eg";
+  const ar = useUserLang() === "ar-eg";
   const [connected, setConnected] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
-
-  const refresh = async () => {
-    try {
-      const snap = await loadIntegrationConnections(CATALOG);
-      setConnected(snap.connectedApps || {});
-      return snap.connectedApps || {};
-    } catch {
-      return {} as Record<string, boolean>;
-    }
-  };
 
   useEffect(() => {
-    document.title = "Integrations — Megsy";
-    void refresh();
+    document.title = "Apps — Megsy";
+    loadIntegrationConnections(CATALOG)
+      .then((s) => setConnected(s.connectedApps || {}))
+      .catch(() => undefined);
   }, []);
 
-  const list = useMemo(() => {
+  const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const base = q
-      ? CATALOG.filter((i) => i.name.toLowerCase().includes(q) || i.description.toLowerCase().includes(q))
-      : CATALOG;
-    return [...base].sort((a, b) => Number(!!connected[b.app]) - Number(!!connected[a.app]));
-  }, [query, connected]);
+    return q ? CATALOG.filter((i) => i.name.toLowerCase().includes(q)) : CATALOG;
+  }, [query]);
+  const mine = filtered.filter((i) => connected[i.app]);
+  const rest = filtered.filter((i) => !connected[i.app]);
 
-  const toggle = async (item: Integration) => {
-    if (busy) return;
-    setBusy(item.app);
-    try {
-      if (connected[item.app]) {
-        await disconnectIntegration(item);
-        await refresh();
-        toast.success(ar ? `تم فصل ${item.name}` : `Disconnected ${item.name}`);
-      } else {
-        const res = await startIntegrationConnection(item);
-        if ("popup" in res && res.popup) {
-          await waitForConnectionRefresh(async () => !!(await refresh())[item.app], res.popup);
-        } else {
-          await refresh();
-        }
-        toast.success(ar ? `تم ربط ${item.name}` : `Connected ${item.name}`);
-      }
-      window.dispatchEvent(new CustomEvent("megsy:integrations-changed"));
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Couldn't complete the action");
-    } finally {
-      setBusy(null);
-    }
-  };
+  const Grid = ({ items }: { items: typeof CATALOG }) => (
+    <div className="grid grid-cols-4 gap-x-3 gap-y-6 sm:grid-cols-6 md:grid-cols-8">
+      {items.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => navigate(`/integrations/${encodeURIComponent(item.app)}`)}
+          className="group flex min-w-0 flex-col items-center gap-2 outline-none"
+        >
+          <span className="relative grid h-[60px] w-[60px] place-items-center rounded-[18px] bg-card ring-1 ring-border/60 transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-ring">
+            <IntegrationLogo item={item} size={34} />
+            {connected[item.app] && (
+              <span className="absolute -top-0.5 -end-0.5 h-3 w-3 rounded-full bg-primary ring-2 ring-background" />
+            )}
+          </span>
+          <span className="w-full truncate text-center text-[11.5px] text-foreground/75">{item.name}</span>
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div dir={ar ? "rtl" : "ltr"} className="min-h-[100dvh] bg-background text-foreground">
-      <header className="border-b border-border bg-card/40">
-        <div className="mx-auto max-w-4xl px-4 pb-7 pt-4 sm:pb-9">
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/chat"))}
-              aria-label="Back"
-              variant="ghost"
-              size="icon-sm"
-              className="rounded-full"
-            >
-              <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
-            </Button>
-            <h1 className="text-xl font-semibold">{ar ? "التطبيقات" : "Apps"}</h1>
-          </div>
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            {ar ? "وصّل تطبيقاتك بميغسي علشان ينفّذ شغلك من مكان واحد." : "Connect the apps Megsy can use to get your work done."}
-          </p>
-          <div className="relative mt-5 max-w-xl">
-            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={ar ? "ابحث عن تطبيق" : "Search apps"}
-              className="w-full rounded-md border border-border bg-background/80 py-2.5 ps-9 pe-4 text-sm outline-none backdrop-blur placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
-            />
-          </div>
+      <div className="mx-auto max-w-3xl px-5 pb-20 pt-4">
+        <button
+          type="button"
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/chat"))}
+          aria-label="Back"
+          className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
+        >
+          <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
+        </button>
+        <h1 className="mt-6 text-[28px] font-semibold tracking-tight">{ar ? "التطبيقات" : "Apps"}</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          {ar ? "اربط تطبيقاتك وميغسي هيستخدمها وقت ما يحتاج." : "Connect your apps and Megsy uses them when needed."}
+        </p>
+        <div className="relative mt-6">
+          <Search className="absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={ar ? "ابحث" : "Search"}
+            className="h-11 w-full rounded-full bg-muted/70 ps-11 pe-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+          />
         </div>
-      </header>
 
-      <main className="mx-auto max-w-4xl px-4 pb-16 pt-8">
-        <div className="grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-5 md:grid-cols-6">
-          {list.map((item) => {
-            const on = !!connected[item.app];
-            return (
-              <Button
-                key={item.id}
-                onClick={() => void toggle(item)}
-                title={item.description}
-                variant="ghost"
-                className="group h-auto min-w-0 flex-col gap-2.5 rounded-md px-1 py-2 text-center"
-              >
-                <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-md border border-border bg-card shadow-sm transition-transform group-active:scale-95">
-                  <IntegrationLogo item={item} size={56} />
-                  {busy === item.app ? (
-                    <span className="absolute inset-0 grid place-items-center rounded-md bg-background/70">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    </span>
-                  ) : on ? (
-                    <span className="absolute -bottom-1 -end-1 grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-foreground ring-2 ring-background">
-                      <Check className="h-3 w-3" />
-                    </span>
-                  ) : null}
-                </span>
-                <span className="line-clamp-2 w-full text-xs font-medium text-foreground/80">{item.name}</span>
-              </Button>
-            );
-          })}
-        </div>
-        {list.length === 0 && (
+        {mine.length > 0 && (
+          <section className="mt-9">
+            <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {ar ? "متصل" : "Connected"}
+            </h2>
+            <Grid items={mine} />
+          </section>
+        )}
+        <section className="mt-9">
+          {mine.length > 0 && (
+            <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {ar ? "كل التطبيقات" : "All apps"}
+            </h2>
+          )}
+          <Grid items={rest} />
+        </section>
+        {filtered.length === 0 && (
           <p className="py-16 text-center text-sm text-muted-foreground">{ar ? "لا نتائج" : "No results"}</p>
         )}
-      </main>
+      </div>
     </div>
   );
 }
