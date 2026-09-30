@@ -41,6 +41,15 @@ export default function ComputerTaskCard({ taskId }: Props) {
   const [events, setEvents] = useState<ComputerEvent[]>([]);
   const [timedOut, setTimedOut] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [decision, setDecision] = useState<"allow" | "deny" | null>(null);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(`megsy:approval:${taskId}`);
+      if (v === "allow" || v === "deny") setDecision(v);
+    } catch {
+      /* ignore */
+    }
+  }, [taskId]);
   const navigate = useNavigate();
   // Files open on their own full page (/file-preview/:id) instead of an overlay
   // stacked on the conversation, so the viewer is clean and shareable.
@@ -224,7 +233,11 @@ export default function ComputerTaskCard({ taskId }: Props) {
 
   // The provider often hands back its own raw payload (JSON, "Final result:",
   // internal reprs). Readers get the prose, never the machinery.
-  const resultText = cleanAgentResult(task?.result_text);
+  const rawResult = cleanAgentResult(task?.result_text);
+  // The agent pauses before sensitive actions and ends with [[APPROVAL: …]].
+  const approvalMatch = /\[\[\s*APPROVAL\s*:\s*([\s\S]*?)\]\]/i.exec(rawResult || "");
+  const approvalAction = approvalMatch?.[1]?.trim() || "";
+  const resultText = approvalMatch ? (rawResult || "").replace(approvalMatch[0], "").trim() : rawResult;
 
   if (timedOut || task?.status === "failed") {
     const reason =
@@ -239,7 +252,7 @@ export default function ComputerTaskCard({ taskId }: Props) {
     );
   }
 
-  if (!resultText && files.length === 0) {
+  if (!resultText && files.length === 0 && !approvalAction) {
     return (
       <div className="my-4 space-y-4">
         <p className="text-[13px] leading-relaxed text-muted-foreground">{labels.empty}</p>
@@ -277,13 +290,58 @@ export default function ComputerTaskCard({ taskId }: Props) {
     }
   };
 
-  // Muse-style actions: when the agent ends on a question, offer one-tap replies.
-  const quickReplies = /[?؟]\s*$/.test((resultText || "").trim())
-    ? isAr ? ["أيوه، كمّل", "لا، شكرًا"] : ["Yes, go ahead", "No, thanks"]
-    : [];
+  const decide = (d: "allow" | "deny") => {
+    setDecision(d);
+    try {
+      localStorage.setItem(`megsy:approval:${taskId}`, d);
+    } catch {
+      /* ignore */
+    }
+    const text =
+      d === "allow"
+        ? isAr
+          ? `موافق. نفّذ الخطوة دي دلوقتي: ${approvalAction}`
+          : `Approved. Go ahead and do this now: ${approvalAction}`
+        : isAr
+          ? `مرفوض. متنفذش الخطوة دي: ${approvalAction}. وقف واقترح بديل لو فيه.`
+          : `Denied. Do not do this: ${approvalAction}. Stop and suggest an alternative if there is one.`;
+    window.dispatchEvent(new CustomEvent("megsy:send-message", { detail: { text } }));
+  };
+
+  const approvalCard = approvalAction ? (
+    <div className="max-w-md rounded-[24px] bg-card p-4 ring-1 ring-border/60">
+      <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
+        {isAr ? "محتاج موافقتك" : "Needs your approval"}
+      </p>
+      <p className="mt-1.5 text-[14px] leading-relaxed text-foreground">{approvalAction}</p>
+      {decision ? (
+        <p className="mt-3 text-[13px] font-medium text-muted-foreground">
+          {decision === "allow" ? (isAr ? "✓ سمحت بالخطوة" : "✓ Allowed") : isAr ? "✕ رفضت الخطوة" : "✕ Denied"}
+        </p>
+      ) : (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => decide("deny")}
+            className="h-10 rounded-full bg-muted text-[13px] font-semibold text-foreground transition-colors hover:bg-muted/70"
+          >
+            {isAr ? "رفض" : "Deny"}
+          </button>
+          <button
+            type="button"
+            onClick={() => decide("allow")}
+            className="h-10 rounded-full bg-primary text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            {isAr ? "سماح" : "Allow"}
+          </button>
+        </div>
+      )}
+    </div>
+  ) : null;
+  const quickReplies: string[] = [];
 
   const fileGrid =
-    files.length > 0 || quickReplies.length > 0 ? (
+    files.length > 0 || approvalCard ? (
       <div className="mt-3 space-y-2.5">
         {htmlFile ? (
           <button
@@ -343,20 +401,8 @@ export default function ComputerTaskCard({ taskId }: Props) {
           );
         })}
         </div>
-        {quickReplies.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {quickReplies.map((q) => (
-              <button
-                key={q}
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("megsy:prefill-composer", { detail: { text: q } }))}
-                className="h-10 rounded-full bg-primary px-5 text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        )}
+        {quickReplies.length > 0 && null}
+        {approvalCard}
       </div>
     ) : null;
 
