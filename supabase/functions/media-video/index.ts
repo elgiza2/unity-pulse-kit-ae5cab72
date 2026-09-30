@@ -158,6 +158,11 @@ Deno.serve(async (request) => {
   if (!user)
     return out({ error: true, paywall: true, message: "Sign in to generate videos." }, 401);
 
+  // The single agent (Browser Use Cloud) lives here too.
+  if (body.kind === "agent") {
+    const { handleAgent } = await import("./agent.ts");
+    return handleAgent(db, user.id, body, out);
+  }
   // Fixed tiers: free = MiniMax (1/day), subscribers = Seedance 2.5 (5/day).
   // The client-selected model is ignored.
   return handleTier(user.id, body);
