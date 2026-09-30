@@ -142,7 +142,7 @@ const AnimatedInput = ({
     }
   }, [composerLocation.search]);
   useEffect(() => {
-    const open = () => setIntegrationsOpen(true);
+    const open = () => navigate("/integrations");
     window.addEventListener("megsy:open-integrations", open);
     return () => window.removeEventListener("megsy:open-integrations", open);
   }, []);
@@ -465,9 +465,9 @@ const AnimatedInput = ({
             </Button>
 
             {(focused || hasText) && (
-              <ComposerIntegrationsButton onClick={() => setIntegrationsOpen(true)} />
+              <ComposerIntegrationsButton onClick={() => navigate("/integrations")} />
             )}
-            <IntegrationsSheet open={integrationsOpen} onOpenChange={setIntegrationsOpen} />
+
 
             {serviceTools}
 
