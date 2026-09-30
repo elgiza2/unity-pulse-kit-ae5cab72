@@ -57,6 +57,7 @@ import {
   McpCallbackPage,
   AIPersonalizationPage,
   MemoryPage,
+  TasksPage,
   SettingsSupportPage,
   SettingsHelpPage,
   SettingsContactPage,
@@ -254,6 +255,14 @@ export const AppRoutes = ({ currentUserId }: { currentUserId: string | null }) =
       element={
         <ProtectedRoute>
           <MemoryPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/tasks"
+      element={
+        <ProtectedRoute>
+          <TasksPage />
         </ProtectedRoute>
       }
     />
