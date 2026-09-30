@@ -254,7 +254,7 @@ export default function ComputerTaskCard({ taskId }: Props) {
   const approvalAction = approvalMatch?.[1]?.trim() || "";
   const afterApproval = approvalMatch ? (rawResult || "").replace(approvalMatch[0], "").trim() : rawResult;
   // Tasks / alarms / goals the agent created: saved once, hidden from the text.
-  const { clean: resultText, actions: lifeActions } = extractLifeActions(afterApproval || "");
+  const { clean: resultText } = extractLifeActions(afterApproval || "");
 
   if (timedOut || task?.status === "failed") {
     const reason =
