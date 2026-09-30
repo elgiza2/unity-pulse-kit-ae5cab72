@@ -1,7 +1,7 @@
 /** @doc Memory — what Megsy remembers about the user (user_knowledge): add, edit, toggle, delete, search. */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, Loader2, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, Plus, Search, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyTurnContextChanged } from "@/lib/chat/turnContext";
@@ -177,21 +177,28 @@ export default function MemoryPage() {
             type="button"
             aria-label="Back"
             onClick={() => navigate("/settings", { replace: true })}
-            className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
+            className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-muted"
           >
             <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
           </button>
           <button
             type="button"
             onClick={() => setDraft({ name: "", use_when: "", content: "" })}
-            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background transition-opacity hover:opacity-90"
+            className="megsy-brand inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[13px] font-bold shadow-md shadow-brand-from/25 transition-transform hover:scale-[1.03] active:scale-95"
           >
             <Plus className="h-4 w-4" /> {t.add}
           </button>
         </div>
 
-        <h1 className="mt-6 text-[30px] font-semibold tracking-tight">{t.title}</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{t.sub}</p>
+        <div className="mt-6 flex items-center gap-3">
+          <span className="megsy-brand grid h-12 w-12 shrink-0 place-items-center rounded-2xl shadow-md shadow-brand-from/25">
+            <Brain className="h-6 w-6" />
+          </span>
+          <div>
+            <h1 className="text-[26px] font-bold leading-tight tracking-tight">{t.title}</h1>
+            <p className="text-[13px] text-muted-foreground">{t.sub}</p>
+          </div>
+        </div>
 
         {rows.length > 0 && (
           <div className="relative mt-6">
@@ -211,16 +218,20 @@ export default function MemoryPage() {
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : rows.length === 0 ? (
-            <div className="flex flex-col items-center rounded-[28px] bg-card px-6 py-14 text-center ring-1 ring-border/60">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
-                <Brain className="h-6 w-6" />
+            <div className="megsy-brand-soft relative flex flex-col items-center overflow-hidden rounded-[32px] px-6 py-14 text-center ring-1 ring-border/50">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -top-16 end-8 h-40 w-40 rounded-full bg-brand-to/20 blur-2xl"
+              />
+              <span className="megsy-brand grid h-16 w-16 place-items-center rounded-[22px] shadow-lg shadow-brand-from/30">
+                <Sparkles className="h-7 w-7" />
               </span>
-              <p className="mt-4 text-[15px] font-semibold">{t.empty}</p>
-              <p className="mt-1 max-w-xs text-sm text-muted-foreground">{t.emptySub}</p>
+              <p className="mt-5 text-[16px] font-bold">{t.empty}</p>
+              <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-muted-foreground">{t.emptySub}</p>
               <button
                 type="button"
                 onClick={() => setDraft({ name: "", use_when: "", content: "" })}
-                className="mt-5 inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-5 text-[13px] font-semibold text-primary-foreground"
+                className="megsy-brand mt-6 inline-flex h-11 items-center gap-1.5 rounded-full px-6 text-[14px] font-bold shadow-md shadow-brand-from/25 transition-transform hover:scale-[1.03] active:scale-95"
               >
                 <Plus className="h-4 w-4" /> {t.add}
               </button>
@@ -230,15 +241,19 @@ export default function MemoryPage() {
           ) : (
             <ul className="space-y-2.5">
               {shown.map((r) => (
-                <li key={r.id} className="flex items-start gap-3 rounded-[22px] bg-card p-4 ring-1 ring-border/60">
+                <li
+                  key={r.id}
+                  className={`flex items-start gap-3 rounded-[24px] bg-card p-4 ring-1 ring-border/60 transition-opacity ${r.enabled ? "" : "opacity-60"}`}
+                >
+                  <span className="megsy-brand-soft mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-foreground">
+                    <Brain className="h-4.5 w-4.5" />
+                  </span>
                   <button
                     type="button"
                     onClick={() => setDraft({ id: r.id, name: r.name, use_when: r.use_when, content: r.content })}
                     className="min-w-0 flex-1 text-start"
                   >
-                    <p className={`truncate text-[14.5px] font-semibold ${r.enabled ? "" : "text-muted-foreground"}`}>
-                      {r.name || t.untitled}
-                    </p>
+                    <p className="truncate text-[14.5px] font-semibold">{r.name || t.untitled}</p>
                     <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">{r.content}</p>
                     <p className="mt-2 truncate text-[12px] text-muted-foreground/80">
                       {t.when}: {r.use_when}
@@ -250,7 +265,7 @@ export default function MemoryPage() {
                     aria-checked={r.enabled}
                     aria-label={r.enabled ? t.on : t.off}
                     onClick={() => toggle(r)}
-                    className={`relative mt-0.5 h-6 w-10 shrink-0 rounded-full transition-colors ${r.enabled ? "bg-primary" : "bg-muted"}`}
+                    className={`relative mt-1.5 h-6 w-10 shrink-0 rounded-full transition-colors ${r.enabled ? "megsy-brand" : "bg-muted"}`}
                   >
                     <span
                       className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all ${
@@ -283,7 +298,7 @@ export default function MemoryPage() {
                 type="button"
                 onClick={save}
                 disabled={saving}
-                className="h-9 rounded-full bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+                className="megsy-brand h-9 rounded-full px-4 text-[13px] font-bold disabled:opacity-60"
               >
                 {saving ? t.saving : t.save}
               </button>

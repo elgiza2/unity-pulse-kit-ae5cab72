@@ -171,6 +171,11 @@ html.lenis body {
   --brand-midnight: 0 0% 0%;       /* #000000 */
   --brand-smoke: 240 5% 90%;      /* #e5e5e7 */
 
+  /* Warm brand gradient (pink → amber) used by settings/usage/integrations pages */
+  --brand-from: 340 72% 52%;
+  --brand-to: 32 95% 55%;
+  --brand-foreground: 0 0% 100%;
+
   /* ── Overlay tokens (glass/sidebar/profile shell) ─────────────
      Centralized rgba constants so we don't scatter hex/rgba in TSX.
      Naming: --overlay-{white|black}-{opacity*100}. */
@@ -3942,3 +3947,22 @@ a.bg-primary:hover,
 .offer-visual-lines-one { top: 34%; left: -8%; transform: rotate(17deg); }
 .offer-visual-lines-two { bottom: 24%; right: -8%; transform: rotate(-14deg); opacity: .65; }
 @media (min-width: 640px) { .offer-visual { min-height: 270px; } }
+
+/* ── Megsy warm brand gradient helpers ─────────────────────────────── */
+.megsy-brand {
+  background-image: linear-gradient(135deg, hsl(var(--brand-from)), hsl(var(--brand-to)));
+  color: hsl(var(--brand-foreground));
+}
+.megsy-brand-text {
+  background-image: linear-gradient(135deg, hsl(var(--brand-from)), hsl(var(--brand-to)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.megsy-brand-soft {
+  background-image: linear-gradient(
+    135deg,
+    hsl(var(--brand-from) / 0.12),
+    hsl(var(--brand-to) / 0.12)
+  );
+}

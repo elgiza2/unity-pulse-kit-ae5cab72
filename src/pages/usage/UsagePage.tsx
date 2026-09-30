@@ -1,7 +1,22 @@
-/** @doc Credits — balance hero, daily allowance, today's use and credit history. */
+/** @doc Credits — gradient balance hero, daily allowance, today's use and credit history. */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Clapperboard,
+  FileText,
+  Gift,
+  Globe,
+  Image as ImageIcon,
+  Loader2,
+  MessageCircle,
+  Presentation,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Wand2,
+  Zap,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { claimDailyCredits, fetchCreditOverview, type CreditOverview } from "@/lib/creditsSystem";
 import { useUserLang } from "@/lib/authI18n";
@@ -25,6 +40,19 @@ const LABELS: Record<string, [string, string]> = {
   web: ["Website", "موقع"],
   chat: ["Chat", "محادثة"],
   task: ["Task", "مهمة"],
+};
+
+const ICONS: Record<string, typeof Zap> = {
+  reward: Gift,
+  daily: RefreshCw,
+  video: Clapperboard,
+  edit: Wand2,
+  image: ImageIcon,
+  slides: Presentation,
+  research: Search,
+  web: Globe,
+  chat: MessageCircle,
+  task: Zap,
 };
 
 /** Never expose upstream provider or model names in the UI. */
@@ -114,25 +142,35 @@ export default function UsagePage() {
             type="button"
             aria-label="Back"
             onClick={() => navigate("/settings", { replace: true })}
-            className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
+            className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-muted"
           >
             <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
           </button>
-          <span className="rounded-full bg-muted px-3 py-1 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="megsy-brand-soft rounded-full px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-foreground">
             {paid ? plan : ar ? "مجاني" : "Free"}
           </span>
         </div>
 
-        {/* Balance */}
-        <section className="mt-8 text-center">
-          <p className="text-[13px] font-medium text-muted-foreground">{ar ? "رصيدك" : "Your credits"}</p>
-          <p className="mt-2 text-[64px] font-semibold leading-none tracking-tight tabular-nums">
+        {/* Balance hero */}
+        <section className="megsy-brand relative mt-6 overflow-hidden rounded-[32px] px-6 pb-7 pt-8 text-center shadow-xl shadow-brand-from/20">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -end-16 -top-20 h-56 w-56 rounded-full bg-white/15 blur-2xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-24 -start-10 h-48 w-48 rounded-full bg-black/10 blur-2xl"
+          />
+          <p className="relative text-[13px] font-medium text-brand-foreground/85">
+            {ar ? "رصيدك" : "Your credits"}
+          </p>
+          <p className="relative mt-2 text-[56px] font-bold leading-none tracking-tight tabular-nums">
             {ov ? fmt(ov.credits) : "—"}
           </p>
           <button
             type="button"
             onClick={() => navigate("/pricing")}
-            className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-[14px] font-semibold text-background transition-opacity hover:opacity-90"
+            className="relative mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-brand-foreground px-6 text-[14px] font-bold text-foreground shadow-lg transition-transform hover:scale-[1.03] active:scale-95"
           >
             <Sparkles className="h-4 w-4" />
             {paid ? (ar ? "إدارة الاشتراك" : "Manage plan") : ar ? "ترقية" : "Upgrade"}
@@ -140,15 +178,18 @@ export default function UsagePage() {
         </section>
 
         {/* Today */}
-        <section className="mt-10 rounded-[28px] bg-card p-5 ring-1 ring-border/60">
+        <section className="mt-4 rounded-[28px] bg-card p-5 ring-1 ring-border/60">
           <div className="flex items-baseline justify-between">
             <p className="text-[14px] font-semibold">{ar ? "النهارده" : "Today"}</p>
             <p className="text-[13px] tabular-nums text-muted-foreground">
               {ov ? `${fmt(ov.spentToday)} / ${fmt(ov.dailyAllowance)}` : "—"}
             </p>
           </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${usedPct}%` }} />
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className="megsy-brand h-full rounded-full transition-all"
+              style={{ width: `${Math.max(usedPct, ov && ov.spentToday > 0 ? 3 : 0)}%` }}
+            />
           </div>
           <div className="mt-5 grid grid-cols-3 gap-2 text-center">
             <Stat label={ar ? "مهام" : "Tasks"} value={ov ? fmt(ov.tasksToday) : "—"} />
@@ -158,7 +199,7 @@ export default function UsagePage() {
         </section>
 
         {/* History */}
-        <h2 className="mb-3 mt-10 px-1 text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
+        <h2 className="mb-3 mt-10 px-1 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
           {ar ? "السجل" : "History"}
         </h2>
         {loading ? (
@@ -175,21 +216,28 @@ export default function UsagePage() {
           <div className="space-y-6">
             {groups.map(([day, items]) => (
               <div key={day}>
-                <p className="mb-2 px-1 text-[12.5px] text-muted-foreground">{day}</p>
-                <div className="divide-y divide-border/60 overflow-hidden rounded-[22px] bg-card ring-1 ring-border/60">
+                <p className="mb-2 px-1 text-[12.5px] font-medium text-muted-foreground">{day}</p>
+                <div className="divide-y divide-border/60 overflow-hidden rounded-[24px] bg-card ring-1 ring-border/60">
                   {items.map((it) => {
                     const amount = Number(it.amount) || 0;
                     const grant = amount < 0; // grants are stored as negatives
-                    const label = LABELS[kindOf(it.description, it.action_type)][ar ? 1 : 0];
+                    const kind = kindOf(it.description, it.action_type);
+                    const Icon = ICONS[kind];
+                    const label = LABELS[kind][ar ? 1 : 0];
                     return (
-                      <div key={it.id} className="flex items-center gap-3 px-4 py-3.5">
+                      <div key={it.id} className="flex items-center gap-3 px-4 py-3">
+                        <span className="megsy-brand-soft grid h-9 w-9 shrink-0 place-items-center rounded-xl text-foreground">
+                          <Icon className="h-4 w-4" />
+                        </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[14px] font-medium">{label}</span>
                           <span className="block text-[12px] text-muted-foreground">
                             {new Date(it.created_at).toLocaleTimeString(loc, { hour: "numeric", minute: "2-digit" })}
                           </span>
                         </span>
-                        <span className={`text-[14px] font-semibold tabular-nums ${grant ? "text-primary" : "text-foreground"}`}>
+                        <span
+                          className={`text-[14px] font-bold tabular-nums ${grant ? "megsy-brand-text" : "text-foreground"}`}
+                        >
                           {grant ? "+" : "−"}
                           {fmt(Math.abs(amount))}
                         </span>
@@ -209,7 +257,7 @@ export default function UsagePage() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-muted/60 px-2 py-3">
-      <p className="text-[15px] font-semibold tabular-nums">{value}</p>
+      <p className="text-[15px] font-bold tabular-nums">{value}</p>
       <p className="mt-0.5 text-[11.5px] text-muted-foreground">{label}</p>
     </div>
   );
