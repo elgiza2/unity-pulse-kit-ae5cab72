@@ -207,7 +207,7 @@ export function ChatComposerSection(props: ChatComposerSectionProps) {
 
             <div data-tour="composer" className="relative">
             <AnimatePresence initial={false}>
-              {computerView?.active ? (
+              {computerView?.active && (computerView.url || computerView.poster) ? (
                 <motion.div
                   key={computerView.id}
                   initial={{ opacity: 0, y: 10, scale: 0.98 }}
