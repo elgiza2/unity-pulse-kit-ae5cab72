@@ -7988,3 +7988,16 @@ a.bg-primary:hover,
   /* Scrollbars */
   * { scrollbar-width: thin; scrollbar-color: hsl(var(--foreground) / 0.15) transparent; }
 }
+@media (min-width: 1024px) {
+  [data-desktop-mono] svg { filter: grayscale(1); }
+}
+@media (min-width: 1024px) {
+  .upgrade-plan-btn, button.upgrade-plan-btn {
+    background: hsl(var(--foreground)) !important;
+    color: hsl(var(--background)) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border-radius: 999px !important;
+  }
+  .upgrade-plan-btn * { color: inherit !important; }
+}
