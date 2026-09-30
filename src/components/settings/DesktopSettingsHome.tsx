@@ -139,7 +139,7 @@ export function DesktopSettingsHome() {
       <style>{desktopRowCss}</style>
       {/* Profile block — centered, mobile-inspired */}
       <section className="flex flex-col items-center pt-4">
-        <div className="h-[104px] w-[104px] rounded-full overflow-hidden ring-2 ring-foreground/20 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.7)]">
+        <div className="h-[104px] w-[104px] rounded-full overflow-hidden ring-2 ring-foreground/20 shadow-sm">
           {avatarUrl ? (
             <img
               loading="lazy"
@@ -160,11 +160,7 @@ export function DesktopSettingsHome() {
       {isFree && (
         <button
           onClick={() => go("/settings/billing")}
-          className="group relative w-full rounded-2xl px-5 py-4 flex items-center gap-3.5 text-left text-foreground overflow-hidden border border-foreground/12 shadow-[0_18px_50px_-18px_rgba(99,102,241,0.7)] transition-transform hover:-translate-y-0.5"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(139,92,246,0.95) 0%, rgba(99,102,241,0.95) 55%, rgba(59,130,246,0.95) 100%)",
-          }}
+          className="group relative w-full rounded-2xl px-5 py-4 flex items-center gap-3.5 text-left text-foreground overflow-hidden border border-border bg-card hover:bg-muted transition-colors"
         >
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-foreground/15 border border-foreground/25 backdrop-blur">
             <MegsyStar className="h-6 w-6" />
