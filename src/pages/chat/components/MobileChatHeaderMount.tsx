@@ -156,7 +156,7 @@ export function MobileChatHeaderMount(props: MobileChatHeaderMountProps) {
             settingsPanel={
               chatMode === "images" || chatMode === "video" ? (
                 <MediaSettingsPanel
-                  mode={chatMode}
+                  mode={chatMode as "images" | "video"}
                   onChange={(settings) => {
                     if (settings.duration !== undefined) props.setVideoDurationSec?.(settings.duration);
                   }}
