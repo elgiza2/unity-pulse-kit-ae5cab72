@@ -44,13 +44,7 @@ export async function runComputerTurn({
   ownInsertedIdsRef,
 }: RunComputerArgs) {
   const prompt = stripComputerMention(text);
-  const computerPrompt = `${prompt || text}
-
-Execution guardrails:
-- For coding or website tasks, write files atomically with the available file tool, then read them back and validate the result.
-- Never retry a corrupted file-writing method more than twice. If the provider's writer mangles characters or a required file API is unavailable, stop the task with a clear failure instead of looping.
-- Prefer the workspace file tools over JavaScript string injection, base64 tricks, browser downloads, or unsupported File System Access APIs.
-- Do not claim completion unless the produced file is readable and valid.`;
+  const computerPrompt = prompt || text;
   const assistantClientId = `assistant-${localTurnId}`;
 
 
