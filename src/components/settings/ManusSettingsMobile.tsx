@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Bell,
   ChevronLeft,
   ChevronRight,
   Lightbulb,
@@ -100,8 +99,7 @@ const ManusSettingsMobile = () => {
   const mainRows: Row[] = [
     // Mail is hidden until its UI is reworked.
     // { icon: MailIcon, label: "Mail", trailing: "@megsyai.com", path: "/mail" },
-    { icon: Lightbulb, label: "Knowledge", path: "/settings/memory" },
-    { icon: Bell, label: "Notifications", path: "/notifications" },
+    { icon: Lightbulb, label: "Memory", path: "/settings/memory" },
     { icon: PanelBottom, label: "Cloud browser", path: "/settings/cloud-browser" },
 
     { icon: Puzzle, label: "Skills", path: "/settings/skills" },

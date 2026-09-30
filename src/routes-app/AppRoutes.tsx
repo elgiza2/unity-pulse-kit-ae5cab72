@@ -51,13 +51,11 @@ import {
   LanguagePage,
   MailPage,
   PasswordsPage,
-  NotificationsPage,
-  NotificationsInboxPage,
   UsagePage,
   McpSettingsPage,
   McpCallbackPage,
   AIPersonalizationPage,
-  KnowledgePage,
+  MemoryPage,
   SettingsSupportPage,
   SettingsHelpPage,
   SettingsContactPage,
@@ -199,14 +197,6 @@ export const AppRoutes = ({ currentUserId }: { currentUserId: string | null }) =
       }
     />
     <Route
-      path="/settings/notifications"
-      element={
-        <ProtectedRoute>
-          <NotificationsPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
       path="/usage"
       element={
         <ProtectedRoute>
@@ -214,14 +204,8 @@ export const AppRoutes = ({ currentUserId }: { currentUserId: string | null }) =
         </ProtectedRoute>
       }
     />
-    <Route
-      path="/notifications"
-      element={
-        <ProtectedRoute>
-          <NotificationsInboxPage />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/settings/notifications" element={<Navigate to="/settings" replace />} />
+    <Route path="/notifications" element={<Navigate to="/settings" replace />} />
     <Route
       path="/settings/security"
       element={
@@ -268,7 +252,7 @@ export const AppRoutes = ({ currentUserId }: { currentUserId: string | null }) =
       path="/settings/memory"
       element={
         <ProtectedRoute>
-          <KnowledgePage />
+          <MemoryPage />
         </ProtectedRoute>
       }
     />

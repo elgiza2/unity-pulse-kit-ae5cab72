@@ -22,7 +22,6 @@ export const OperatorInlineBubbleLazy = lazy(() =>
 );
 
 export const InChatTimerCard = lazy(() => retryImport(() => import("@/components/learn/InChatTimerCard")));
-export const ConnectorsDialog = lazy(() => retryImport(() => import("@/components/integrations/ConnectorsDialog")));
 export const DirectoryDialog = lazy(() => retryImport(() => import("@/components/integrations/DirectoryDialog")));
 export const TemplatePickerSheet = lazy(() => retryImport(() => import("@/components/files/TemplatePickerSheet")));
 export const DocsArtifactCard = lazy(() =>

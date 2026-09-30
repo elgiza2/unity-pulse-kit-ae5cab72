@@ -42,7 +42,6 @@ const AppLayout = ({
   const isSettings =
     pathname.startsWith("/settings") ||
     pathname.startsWith("/usage") ||
-    pathname.startsWith("/notifications") ||
     pathname.startsWith("/profile");
   useEffect(() => {
     const root = document.documentElement;

@@ -1,11 +1,9 @@
 import { Suspense } from "react";
 import type { NavigateFunction } from "react-router-dom";
-import { ConnectorsDialog, DirectoryDialog, TemplatePickerSheet } from "../lazyComponents";
+import { DirectoryDialog, TemplatePickerSheet } from "../lazyComponents";
 import { SLIDES_TEMPLATES } from "@/lib/slidesTemplates";
 
 interface ChatGlobalModalsProps {
-  connectorsOpen: boolean;
-  setConnectorsOpen: (open: boolean) => void;
   directoryOpen: boolean;
   setDirectoryOpen: (open: boolean) => void;
   slidesPickerOpen: boolean;
@@ -16,8 +14,6 @@ interface ChatGlobalModalsProps {
 }
 
 export const ChatGlobalModals = ({
-  connectorsOpen,
-  setConnectorsOpen,
   directoryOpen,
   setDirectoryOpen,
   slidesPickerOpen,
@@ -28,14 +24,6 @@ export const ChatGlobalModals = ({
 }: ChatGlobalModalsProps) => {
   return (
     <Suspense fallback={null}>
-      {connectorsOpen && (
-        <ConnectorsDialog
-          open={connectorsOpen}
-          onOpenChange={setConnectorsOpen}
-          onNavigateIntegrations={() => navigate("/integrations")}
-        />
-      )}
-
       {directoryOpen && (
         <DirectoryDialog
           open={directoryOpen}
