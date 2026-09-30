@@ -3152,6 +3152,33 @@ export type Database = {
         }
         Relationships: []
       }
+      device_push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       document_premium_usage: {
         Row: {
           id: string
@@ -4375,6 +4402,36 @@ export type Database = {
           id?: string
           prompt?: string
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      life_settings: {
+        Row: {
+          created_at: string
+          last_morning_date: string | null
+          morning_enabled: boolean
+          morning_time: string
+          tz: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_morning_date?: string | null
+          morning_enabled?: boolean
+          morning_time?: string
+          tz?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_morning_date?: string | null
+          morning_enabled?: boolean
+          morning_time?: string
+          tz?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -8680,6 +8737,7 @@ export type Database = {
           created_at: string
           id: string
           kind: string
+          push_sent_at: string | null
           run_at: string
           sent_at: string | null
           task_id: string | null
@@ -8691,6 +8749,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
+          push_sent_at?: string | null
           run_at: string
           sent_at?: string | null
           task_id?: string | null
@@ -8702,6 +8761,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
+          push_sent_at?: string | null
           run_at?: string
           sent_at?: string | null
           task_id?: string | null
