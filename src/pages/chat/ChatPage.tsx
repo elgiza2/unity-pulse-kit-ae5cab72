@@ -1770,7 +1770,10 @@ const ChatPage = () => {
       }
       const intent: { use: boolean; task: string } = { use: !isMediaAsk, task: text };
       if (intent.use) pendingComputerIntentRef.current = intent.task || text;
-      if (chatMode !== "operator" && intent.use) {
+      // Every non-media turn — fast or slow — goes to the one agent
+      // (Browser Use on DeepSeek). No other chat service is used.
+      if (intent.use) {
+        if (!intent.task.trim()) intent.task = "Look at the attached files and help me with them.";
         const { canRunComputerTask, recordComputerTask, computerDailyLimit } =
           await import("@/lib/computer/usageLimits");
         if (!canRunComputerTask(userPlan)) {

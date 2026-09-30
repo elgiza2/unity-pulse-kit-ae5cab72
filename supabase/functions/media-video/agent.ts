@@ -66,6 +66,8 @@ export async function handleAgent(
             task: prompt,
             llm: LLM,
             maxSteps: 60,
+            // Fast mode: quick answers for simple turns, same agent + model.
+            flashMode: true,
             systemPromptExtension: SYSTEM,
             metadata: { user_id: userId },
           }),
