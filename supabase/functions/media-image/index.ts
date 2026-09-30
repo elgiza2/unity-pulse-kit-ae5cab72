@@ -19,9 +19,11 @@ const out = (body: unknown, status = 200) =>
 
 // Lowest quality tier (cheapest Runway credits).
 function ratio(aspect?: string) {
-  if (aspect === "9:16") return "720:1280";
-  if (aspect === "16:9") return "1280:720";
-  return "720:720";
+  if (aspect === "9:16") return "1088:1920";
+  if (aspect === "16:9") return "1920:1088";
+  if (aspect === "3:4") return "1440:1920";
+  if (aspect === "4:3") return "1920:1440";
+  return "1920:1920";
 }
 function firstImage(value: unknown, depth = 0): string | null {
   if (depth > 6 || value == null) return null;
@@ -50,8 +52,10 @@ async function generateRunway(
     model,
     promptText: prompt,
     ratio: ratio(aspect),
-    referenceImages: refs.map((uri) => ({ uri })),
+    quality: "low",
+    outputCount: 1,
   };
+  if (refs.length) body.referenceImages = refs.slice(0, 16).map((uri) => ({ uri }));
   const create = await fetch("https://api.dev.runwayml.com/v1/text_to_image", {
     method: "POST",
     headers: {
@@ -98,26 +102,17 @@ Deno.serve(async (request) => {
   }
   const prompt = String(body?.prompt ?? "").trim();
   if (!prompt) return out({ error: true, message: "prompt is required" }, 400);
-  const slug = String(body?.model_slug ?? "runway-gen4-image-turbo");
-  if (!/runway|gen4_image_turbo/i.test(slug))
-    return out(
-      { error: true, message: "This compatibility endpoint supports Runway image models only." },
-      400,
-    );
+  // One fixed image model for the whole app: GPT Image 2 on Runway, low quality.
+  const slug = "runway-gpt-image-2";
   const rawRefs = body?.reference_image_urls ?? body?.reference_image_url ?? body?.image_url;
   const refs = (Array.isArray(rawRefs) ? rawRefs : rawRefs ? [rawRefs] : [])
     .map((item) => String(item))
     .filter((item) => /^https?:\/\//.test(item));
-  if (!refs.length)
-    return out(
-      { error: true, message: "Runway Gen-4 Image requires at least one reference image." },
-      400,
-    );
 
   const keys = await vaultKeys("runway");
   if (!keys.length)
     return out({ error: true, message: "No active Runway keys are configured." }, 503);
-  const model = slug.includes("gen4") ? "gen4_image_turbo" : slug.replace(/^runway-/, "");
+  const model = "gpt_image_2";
   let lastError = "Runway image failed";
   for (const key of keys) {
     await noteKeyAttempt(key);
