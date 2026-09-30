@@ -5,6 +5,8 @@ import { AlarmClock, ArrowLeft, Bell, Check, Loader2, Plus, Trash2, X } from "lu
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserLang } from "@/lib/authI18n";
+import { cancelNativeTask, isNativeApp, syncNativeTask } from "@/lib/native/bridge";
+import MorningPlanCard from "@/components/life/MorningPlanCard";
 
 type Goal = { id: string; title: string; done: boolean };
 type Task = {
@@ -36,7 +38,7 @@ const T = {
     done: "Done",
     byMegsy: "By Megsy",
     failed: "Could not save",
-    alarmSoon: "Phone alarms turn on with the Android app. For now you'll get a notification.",
+    alarmSoon: "Open Megsy on your Android phone to set this as a real alarm.",
   },
   ar: {
     title: "المهام",
@@ -55,7 +57,7 @@ const T = {
     done: "خلصت",
     byMegsy: "من ميغسي",
     failed: "مقدرناش نحفظ",
-    alarmSoon: "منبهات الموبايل هتشتغل مع تطبيق أندرويد. دلوقتي هيوصلك إشعار.",
+    alarmSoon: "افتح ميغسي من تطبيق الأندرويد عشان يتضبط كمنبه حقيقي.",
   },
 };
 
@@ -125,10 +127,12 @@ export default function TasksPage() {
   const toggleTask = async (tk: Task) => {
     const status = tk.status === "done" ? "todo" : "done";
     setTasks((p) => p.map((x) => (x.id === tk.id ? { ...x, status } : x)));
+    syncNativeTask({ ...tk, status });
     await supabase.from("life_tasks").update({ status }).eq("id", tk.id);
   };
   const removeTask = async (id: string) => {
     setTasks((p) => p.filter((x) => x.id !== id));
+    cancelNativeTask(id);
     await supabase.from("life_tasks").delete().eq("id", id);
   };
 
@@ -139,18 +143,23 @@ export default function TasksPage() {
     const res =
       sheet === "goal"
         ? await supabase.from("life_goals").insert({ title })
-        : await supabase.from("life_tasks").insert({
-            title,
-            kind: alarm ? "alarm" : "task",
-            remind_at: when ? new Date(when).toISOString() : null,
-            due_at: when ? new Date(when).toISOString() : null,
-          });
+        : await supabase
+            .from("life_tasks")
+            .insert({
+              title,
+              kind: alarm ? "alarm" : "task",
+              remind_at: when ? new Date(when).toISOString() : null,
+              due_at: when ? new Date(when).toISOString() : null,
+            })
+            .select("id,title,kind,remind_at,status")
+            .single();
+    if (sheet !== "goal" && res.data) syncNativeTask(res.data as Task);
     setSaving(false);
     if (res.error) {
       toast.error(t.failed);
       return;
     }
-    if (alarm) toast(t.alarmSoon);
+    if (alarm && !isNativeApp()) toast(t.alarmSoon);
     if (when && "Notification" in window && Notification.permission === "default") void Notification.requestPermission();
     setSheet(null);
     setText("");
@@ -228,6 +237,8 @@ export default function TasksPage() {
               ))}
             </ul>
           </section>
+
+          <MorningPlanCard ar={ar} />
 
           {/* Tasks */}
           <section className="rounded-[28px] bg-card p-6 ring-1 ring-border/60">

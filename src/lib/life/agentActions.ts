@@ -1,5 +1,6 @@
 /** Extracts [[TASK|ALARM|GOAL: …]] lines from agent replies and saves them once per task. */
 import { supabase } from "@/integrations/supabase/client";
+import { syncNativeTask, type NativeTask } from "@/lib/native/bridge";
 
 const RE = /\[\[\s*(TASK|ALARM|GOAL)\s*:\s*([^\]|]+?)\s*(?:\|\s*([^\]]+?)\s*)?\]\]/gi;
 
@@ -36,7 +37,10 @@ export async function saveLifeActions(taskId: string, actions: LifeAction[]): Pr
     .map((a) => ({ title: a.title, kind: a.type, remind_at: a.at, due_at: a.at, source: "agent" }));
   const [g, t] = await Promise.all([
     goals.length ? supabase.from("life_goals").insert(goals) : Promise.resolve({ error: null }),
-    tasks.length ? supabase.from("life_tasks").insert(tasks) : Promise.resolve({ error: null }),
+    tasks.length
+      ? supabase.from("life_tasks").insert(tasks).select("id,title,kind,remind_at,status")
+      : Promise.resolve({ error: null, data: [] }),
   ]);
+  for (const row of (t.data as NativeTask[] | null) ?? []) syncNativeTask(row);
   return !g.error && !t.error;
 }

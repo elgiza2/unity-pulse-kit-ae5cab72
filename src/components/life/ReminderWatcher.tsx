@@ -3,9 +3,17 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { bootNativeBridge } from "@/lib/native/bridge";
 
 export default function ReminderWatcher() {
   const navigate = useNavigate();
+  useEffect(() => {
+    void bootNativeBridge();
+    const { data: sub } = supabase.auth.onAuthStateChange((e) => {
+      if (e === "SIGNED_IN") void bootNativeBridge();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
   useEffect(() => {
     let stopped = false;
     const tick = async () => {
