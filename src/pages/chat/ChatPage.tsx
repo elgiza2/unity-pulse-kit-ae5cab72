@@ -2354,7 +2354,17 @@ const ChatPage = () => {
       if (text) void handleSendRef.current(text);
     };
     window.addEventListener("megsy:send-message", onSend);
-    return () => window.removeEventListener("megsy:send-message", onSend);
+    // Ideas from the Tasks page hand off a prompt through sessionStorage.
+    const pending = sessionStorage.getItem("megsy:pending-prompt");
+    let timer: number | undefined;
+    if (pending) {
+      sessionStorage.removeItem("megsy:pending-prompt");
+      timer = window.setTimeout(() => void handleSendRef.current(pending), 400);
+    }
+    return () => {
+      window.removeEventListener("megsy:send-message", onSend);
+      if (timer) window.clearTimeout(timer);
+    };
   }, []);
 
   // Warm the modules the send path imports so the FIRST send is as fast as

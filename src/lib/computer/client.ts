@@ -65,7 +65,14 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
       Authorization: `Bearer ${token}`,
       apikey: SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ ...body, kind: "agent" }),
+    body: JSON.stringify({
+      ...body,
+      // Local time lets the agent schedule reminders in the user's own clock.
+      ...(typeof (body as { prompt?: unknown }).prompt === "string"
+        ? { prompt: `[user local time: ${localNow()}]\n${(body as { prompt: string }).prompt}` }
+        : {}),
+      kind: "agent",
+    }),
   });
   const data = (await resp.json().catch(() => ({}))) as Record<string, unknown>;
   if (resp.status === 401) throw new Error(SIGN_IN_MESSAGE);
@@ -220,4 +227,11 @@ export function computerErrorMessage(
     default:
       return providerMessage?.trim() || code || "";
   }
+}
+
+function localNow(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  const day = d.toLocaleDateString("en-US", { weekday: "long" });
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())} (${day})`;
 }
