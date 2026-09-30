@@ -21,7 +21,7 @@ export default function DesktopPricing({ plans, faqs, isYearly, setIsYearly, loa
   const t = (s: string) => translateExactText(s, lang);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const curIdx = ORDER.indexOf(((currentPlan ?? "starter").toLowerCase() as PlanTier));
-  const shown = plans.filter((p) => p.tier === "pro" || p.tier === "elite");
+  const shown = plans.filter((p) => p.tier === "pro");
 
   return (
     <div className="mx-auto w-full max-w-[1080px] px-12 pb-24">
@@ -52,23 +52,23 @@ export default function DesktopPricing({ plans, faqs, isYearly, setIsYearly, loa
       </header>
 
       {/* Plans */}
-      <section id="plans-grid" className="grid grid-cols-2 border-b border-border">
+      <section id="plans-grid" className="grid grid-cols-[minmax(0,1.25fr)_minmax(280px,.75fr)] border-b border-border">
         {shown.map((p, i) => {
           const { price, strike, discountLabel, isIntro } = getDisplayPrice(p, isYearly);
           const idx = ORDER.indexOf(p.tier);
           const isCurrent = idx === curIdx;
-          const featured = p.tier === "elite";
+          const featured = true;
           const features = (isYearly ? p.yearlyFeatures : p.monthlyFeatures) ?? p.features;
           return (
             <article
               key={p.tier}
-              className={`flex flex-col px-10 py-12 ${i > 0 ? "border-s border-border" : ""} ${featured ? "bg-card" : ""}`}
+              className="flex flex-col bg-card px-10 py-12"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-[22px] font-semibold">{p.name}</h2>
                 {featured && (
                   <span className="rounded-full border border-foreground px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.14em]">
-                    {t("Most power")}
+                    {t("One simple plan")}
                   </span>
                 )}
               </div>
@@ -115,11 +115,21 @@ export default function DesktopPricing({ plans, faqs, isYearly, setIsYearly, loa
             </article>
           );
         })}
+        <aside className="border-s border-border px-10 py-12">
+          <p className="text-[11px] font-semibold uppercase text-muted-foreground">{t("Clear usage")}</p>
+          <h2 className="mt-4 text-[28px] font-semibold">{t("You always know the cost.")}</h2>
+          <dl className="mt-10 divide-y divide-border border-y border-border text-[14px]">
+            {[["Chat", "Free"], ["Image", "2 credits"], ["Video", "25 credits"], ["Agent", "1–50 credits"]].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between py-4"><dt>{t(label)}</dt><dd className="font-semibold">{t(value)}</dd></div>
+            ))}
+          </dl>
+          <p className="mt-8 text-[13px] leading-relaxed text-muted-foreground">{t("Free accounts get 10 welcome credits and 5 daily credits. Pro members can add 100, 300 or 700-credit packs.")}</p>
+        </aside>
       </section>
 
       {/* Free line */}
       <div className="flex items-center justify-between border-b border-border py-8 text-[14px]">
-        <span className="text-muted-foreground">{t("Not ready? The free plan stays free — one video a day, forever.")}</span>
+        <span className="text-muted-foreground">{t("Not ready? Chat stays free, with 5 credits refreshed daily.")}</span>
         <a href="mailto:support@megsyai.com" className="font-semibold underline underline-offset-4">
           {t("Talk to us")}
         </a>

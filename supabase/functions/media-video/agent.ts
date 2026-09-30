@@ -66,6 +66,24 @@ export async function handleAgent(
     if (!prompt) return out({ error: "prompt is required" }, 400);
     const keys = await vaultKeys(PROVIDER);
     if (!keys.length) return out({ error: "no_capacity" }, 503);
+    const cost = 1;
+    const spent = await db.rpc("spend_credits_auto", {
+      p_user_id: userId,
+      p_amount: cost,
+      p_action_type: "agent_run",
+      p_description: "Megsy agent task",
+    });
+    if (spent.error || spent.data?.success === false) {
+      return out({ error: "insufficient_credits", required_credits: cost, message: "You need at least 1 credit to start an agent task." }, 402);
+    }
+    const refund = async () => {
+      await db.rpc("grant_user_credits", {
+        p_user_id: userId,
+        p_amount: cost,
+        p_action_type: "agent_run_refund",
+        p_description: "Refund for failed agent start",
+      });
+    };
     let lastError = "provider_error";
     let planLockedKeys = 0;
     const createRun = async (apiKey: string) => {
@@ -107,8 +125,11 @@ export async function handleAgent(
           })
           .select("id")
           .single();
-        if (error) return out({ error: error.message }, 500);
-        return out({ task_id: row.id, status: "running" });
+        if (error) {
+          await refund();
+          return out({ error: error.message }, 500);
+        }
+        return out({ task_id: row.id, status: "running", estimated_credits: "1–50", credits_charged: cost });
       } catch (e) {
         lastError = e instanceof Error ? e.message : lastError;
         const status = Number((e as any)?.providerStatus || 500);
@@ -124,6 +145,7 @@ export async function handleAgent(
       }
     }
     if (planLockedKeys === keys.length) {
+      await refund();
       return out(
         {
           error: "agent_plan_locked",
@@ -133,6 +155,7 @@ export async function handleAgent(
         402,
       );
     }
+    await refund();
     return out({ error: "provider_error", message: lastError }, 502);
   }
 
