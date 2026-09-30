@@ -125,10 +125,12 @@ export default function TasksPage() {
   const toggleTask = async (tk: Task) => {
     const status = tk.status === "done" ? "todo" : "done";
     setTasks((p) => p.map((x) => (x.id === tk.id ? { ...x, status } : x)));
+    syncNativeTask({ ...tk, status });
     await supabase.from("life_tasks").update({ status }).eq("id", tk.id);
   };
   const removeTask = async (id: string) => {
     setTasks((p) => p.filter((x) => x.id !== id));
+    cancelNativeTask(id);
     await supabase.from("life_tasks").delete().eq("id", id);
   };
 
@@ -139,12 +141,17 @@ export default function TasksPage() {
     const res =
       sheet === "goal"
         ? await supabase.from("life_goals").insert({ title })
-        : await supabase.from("life_tasks").insert({
-            title,
-            kind: alarm ? "alarm" : "task",
-            remind_at: when ? new Date(when).toISOString() : null,
-            due_at: when ? new Date(when).toISOString() : null,
-          });
+        : await supabase
+            .from("life_tasks")
+            .insert({
+              title,
+              kind: alarm ? "alarm" : "task",
+              remind_at: when ? new Date(when).toISOString() : null,
+              due_at: when ? new Date(when).toISOString() : null,
+            })
+            .select("id,title,kind,remind_at,status")
+            .single();
+    if (sheet !== "goal" && res.data) syncNativeTask(res.data as Task);
     setSaving(false);
     if (res.error) {
       toast.error(t.failed);
