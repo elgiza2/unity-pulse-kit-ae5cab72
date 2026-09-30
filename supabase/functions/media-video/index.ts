@@ -158,6 +158,10 @@ Deno.serve(async (request) => {
   if (!user)
     return out({ error: true, paywall: true, message: "Sign in to generate videos." }, 401);
 
+  if (body.kind === "image") {
+    const { handleImage } = await import("./image.ts");
+    return handleImage(body, out);
+  }
   // The single agent (Browser Use Cloud) lives here too.
   if (body.kind === "agent") {
     const { handleAgent } = await import("./agent.ts");

@@ -11,8 +11,8 @@ import { getRunwayVideoPolicy } from "@/lib/runwayModelPolicy";
 // which resolves the slug to DeAPI / Renderful / Runway. The legacy
 // `media-image` function only understood Runway slugs and rejected the rest.
 // One fixed image model for the whole app: GPT Image 2 on Runway (low quality),
-// served by the `media-image` function.
-const IMAGE_FN = "media-image";
+// served by the `media-video` function under `kind: "image"`.
+const IMAGE_FN = "media-video";
 const FIXED_IMAGE_SLUG = "runway-gpt-image-2";
 
 // Video job pacing depends on the provider. Alibaba Wan runs ~5–6 min end
@@ -73,6 +73,7 @@ async function requestImage(
   }
   const { data, error } = await supabase.functions.invoke(IMAGE_FN, {
     body: {
+      kind: "image",
       prompt: scene.prompt,
       model_slug: routerModelSlug,
       model: routerModelSlug,
