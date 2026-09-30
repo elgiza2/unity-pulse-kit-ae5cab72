@@ -135,7 +135,7 @@ export function DesktopSettingsHome() {
   ];
 
   return (
-    <div className="relative z-10 mx-auto w-full max-w-xl space-y-8 pb-16">
+    <div data-desktop-mono className="relative z-10 mx-auto w-full max-w-xl space-y-8 pb-16">
       <style>{desktopRowCss}</style>
       {/* Profile block — centered, mobile-inspired */}
       <section className="flex flex-col items-center pt-4">
