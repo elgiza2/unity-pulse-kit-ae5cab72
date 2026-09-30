@@ -105,7 +105,7 @@ const ManusSettingsMobile = () => {
     { icon: PanelBottom, label: "Cloud browser", path: "/settings/cloud-browser" },
 
     { icon: Puzzle, label: "Skills", path: "/settings/skills" },
-    { icon: Plug, label: "Integrations", path: "/chat?integrations=1" },
+    { icon: Plug, label: "Integrations", path: "/integrations" },
   ];
 
   const advancedRows: Row[] = [{ icon: Gift, label: "Referrals", path: "/referrals" }];
