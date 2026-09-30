@@ -150,7 +150,7 @@ export async function handleAgent(
   const status = mapStatus(String(t?.status || ""));
   const ev = await bu(
     key.key,
-    `/runs/${row.provider_task_id}/events?limit=500&include_output=false`,
+    `/runs/${row.provider_task_id}/events?limit=500&include_output=true`,
   ).catch(() => null);
   const steps: any[] = Array.isArray(ev?.events) ? ev.events : [];
   const urlOf = (e: any) => e?.data?.url ?? e?.data?.page_url ?? null;
@@ -235,5 +235,15 @@ export async function handleAgent(
       duration: null,
       screenshot_url: browsed ? (e?.data?.screenshot_url ?? e?.data?.screenshotUrl ?? null) : null,
     }));
+  if (events.length) {
+    await db.from("computer_events").upsert(
+      events.map((event) => ({
+        ...event,
+        task_id: row.id,
+        user_id: userId,
+      })),
+      { onConflict: "id" },
+    );
+  }
   return out({ task, events });
 }

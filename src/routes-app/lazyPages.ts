@@ -53,9 +53,7 @@ export const SecurityPage = lazy(() => import("@/pages/settings/SecurityPage"));
 export const LanguagePage = lazy(() => import("@/pages/settings/LanguagePage"));
 export const MailPage = lazy(() => import("@/pages/settings/MailPage"));
 export const PasswordsPage = lazy(() => import("@/pages/settings/PasswordsPage"));
-export const NotificationsPage = lazy(() => import("@/pages/settings/NotificationsPage"));
 export const UsagePage = lazy(() => import("@/pages/usage/UsagePage"));
-export const NotificationsInboxPage = lazy(() => import("@/pages/notifications/NotificationsInboxPage"));
 export const McpSettingsPage = lazy(() => import("@/pages/settings/McpSettingsPage"));
 export const McpCallbackPage = lazy(() => import("@/pages/settings/McpCallbackPage"));
 export const AIPersonalizationPage = lazy(() => import("@/pages/settings/AIPersonalizationPage"));
@@ -88,7 +86,7 @@ export const SlidesPreviewPage = lazy(() => import("@/pages/SlidesPreviewPage"))
 export const SlidesFilePreviewPage = lazy(() => import("@/pages/SlidesFilePreviewPage"));
 export const DocumentPreviewPage = lazy(() => import("@/pages/DocumentPreviewPage"));
 export const FilePreviewPage = lazy(() => import("@/pages/FilePreviewPage"));
-export const KnowledgePage = lazy(() => import("@/pages/settings/KnowledgePage"));
+export const MemoryPage = lazy(() => import("@/pages/settings/MemoryPage"));
 
 /* ── Hidden admin ─────────────────────────────────────────────── */
 export const ManusKeysPage = lazy(() => import("@/pages/admin/ManusKeysPage"));

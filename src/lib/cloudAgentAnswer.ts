@@ -76,8 +76,9 @@ export async function runCloudAgentAnswer(
     if (!snapshot?.task) continue;
 
     for (const event of (snapshot.events ?? []).slice(seenSteps)) {
-      steps.push(event.title);
-      options.onStep?.(event.title, event.url);
+      const streamedThought = event.detail?.trim() || event.title;
+      steps.push(streamedThought);
+      options.onStep?.(streamedThought, event.url);
     }
     seenSteps = (snapshot.events ?? []).length;
 

@@ -21,7 +21,6 @@ import {
   IntegrationsIcon,
   MemoryIcon,
   SkillsIcon,
-  NotificationsIcon,
   SupportIcon,
   PrivacyIcon,
   SignOutIcon,
@@ -58,7 +57,6 @@ const NAV_GROUPS: NavGroup[] = [
     title: "System",
     items: [
       { id: "customization", label: "Composer", path: "/settings/customization", Icon: ThemeIcon },
-      { id: "notifications", label: "Notifications", path: "/settings/notifications", Icon: NotificationsIcon },
       { id: "privacy", label: "Privacy & Data", path: "/settings/privacy", Icon: PrivacyIcon },
     ],
   },

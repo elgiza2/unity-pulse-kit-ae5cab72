@@ -11,6 +11,8 @@ import {
 } from "@/lib/integrationBackend";
 import { IntegrationLogo } from "@/components/chat/integrations/IntegrationRow";
 import { useUserLang } from "@/lib/authI18n";
+import appsReference from "@/assets/integrations-apps-reference.png.asset.json";
+import { Button } from "@/components/ui/button";
 
 /** Integrations — clean app-grid: icon on top, name below, like a phone home screen. */
 export default function IntegrationsPage() {
@@ -71,45 +73,58 @@ export default function IntegrationsPage() {
 
   return (
     <div dir={ar ? "rtl" : "ltr"} className="min-h-[100dvh] bg-background text-foreground">
-      <header className="sticky top-0 z-10 bg-background/90 backdrop-blur px-4 pt-4 pb-3">
-        <div className="mx-auto max-w-3xl">
+      <header className="relative overflow-hidden border-b border-border">
+        <img
+          src={appsReference.url}
+          alt=""
+          className="absolute inset-0 h-full w-full scale-105 object-cover opacity-25 blur-sm"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-background/75" aria-hidden="true" />
+        <div className="relative mx-auto max-w-4xl px-4 pb-7 pt-4 sm:pb-9">
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/chat"))}
               aria-label="Back"
-              className="grid h-9 w-9 place-items-center rounded-full hover:bg-secondary"
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
             >
               <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
-            </button>
-            <h1 className="text-lg font-semibold">{ar ? "التكاملات" : "Integrations"}</h1>
+            </Button>
+            <h1 className="text-xl font-semibold">{ar ? "التطبيقات" : "Apps"}</h1>
           </div>
-          <div className="relative mt-3">
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            {ar ? "وصّل تطبيقاتك بميغسي علشان ينفّذ شغلك من مكان واحد." : "Connect the apps Megsy can use to get your work done."}
+          </p>
+          <div className="relative mt-5 max-w-xl">
             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={ar ? "ابحث عن تطبيق" : "Search apps"}
-              className="w-full rounded-full bg-secondary py-2.5 ps-9 pe-4 text-sm outline-none placeholder:text-muted-foreground"
+              className="w-full rounded-md border border-border bg-background/80 py-2.5 ps-9 pe-4 text-sm outline-none backdrop-blur placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
             />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pb-16 pt-2">
-        <div className="grid grid-cols-4 gap-x-3 gap-y-6 sm:grid-cols-6">
+      <main className="mx-auto max-w-4xl px-4 pb-16 pt-8">
+        <div className="grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-5 md:grid-cols-6">
           {list.map((item) => {
             const on = !!connected[item.app];
             return (
-              <button
+              <Button
                 key={item.id}
                 onClick={() => void toggle(item)}
                 title={item.description}
-                className="group flex flex-col items-center gap-2 text-center"
+                variant="ghost"
+                className="group h-auto min-w-0 flex-col gap-2.5 rounded-md px-1 py-2 text-center"
               >
-                <span className="relative grid h-16 w-16 place-items-center rounded-2xl border border-border bg-card shadow-sm transition-transform group-active:scale-95">
+                <span className="relative grid h-16 w-16 place-items-center rounded-md border border-border bg-card shadow-sm transition-transform group-active:scale-95">
                   <IntegrationLogo item={item} size={56} />
                   {busy === item.app ? (
-                    <span className="absolute inset-0 grid place-items-center rounded-2xl bg-background/70">
+                    <span className="absolute inset-0 grid place-items-center rounded-md bg-background/70">
                       <Loader2 className="h-5 w-5 animate-spin" />
                     </span>
                   ) : on ? (
@@ -118,8 +133,8 @@ export default function IntegrationsPage() {
                     </span>
                   ) : null}
                 </span>
-                <span className="line-clamp-1 w-full text-xs text-foreground/80">{item.name}</span>
-              </button>
+                <span className="line-clamp-2 w-full text-xs font-medium text-foreground/80">{item.name}</span>
+              </Button>
             );
           })}
         </div>

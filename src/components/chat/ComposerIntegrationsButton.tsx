@@ -1,5 +1,5 @@
 import { Blocks } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useConnectedApps } from "@/hooks/useConnectedApps";
 import { Button } from "@/components/ui/button";
 
@@ -15,11 +15,6 @@ interface Props {
  * - Many apps → a clean overlapped stack of up to 3 logos (+N).
  * Fully transparent: no background, no border.
  */
-const prefetchIntegrationsSheet = () => {
-  void import("@/components/chat/IntegrationsSheet");
-  void import("@/pages/chat/components/DraggablePlusSheet");
-};
-
 function ConnectedAppLogo({ name, domain }: { name: string; domain?: string }) {
   const sources = domain
     ? [
@@ -50,27 +45,10 @@ export function ComposerIntegrationsButton({ onClick, label = "Integrations" }: 
   const shown = apps.slice(0, 3);
   const extra = apps.length - shown.length;
 
-  useEffect(() => {
-    if (window.requestIdleCallback) {
-      const idleId = window.requestIdleCallback(prefetchIntegrationsSheet);
-      return () => window.cancelIdleCallback(idleId);
-    }
-
-    const timeoutId: ReturnType<typeof setTimeout> = globalThis.setTimeout(
-      prefetchIntegrationsSheet,
-      300,
-    );
-    return () => globalThis.clearTimeout(timeoutId);
-  }, []);
-
   return (
     <Button
       type="button"
       onClick={onClick}
-      onPointerDown={(event) => {
-        event.preventDefault();
-        prefetchIntegrationsSheet();
-      }}
       aria-label={label}
       variant="ghost"
       size="icon-sm"

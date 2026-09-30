@@ -255,8 +255,7 @@ const ChatPage = () => {
     // warm their chunks right after first paint so the first tap never waits.
     const warmSheets = window.setTimeout(() => {
       preloadPlusMenu();
-      void import("@/components/chat/IntegrationsSheet").catch(() => {});
-      void import("@/components/chat/integrations/IntegrationRow").catch(() => {});
+      void import("@/pages/integrations/IntegrationsPage").catch(() => {});
     }, 300);
     const id = ric
       ? ric(run, { timeout: mobileNow ? 2500 : 1500 })
@@ -314,8 +313,6 @@ const ChatPage = () => {
     setSidebarOpen,
     showScrollBtn,
     setShowScrollBtn,
-    connectorsOpen,
-    setConnectorsOpen,
     directoryOpen,
     setDirectoryOpen,
     chatMenuView,
@@ -1350,7 +1347,7 @@ const ChatPage = () => {
 
   const handleStructuredAction = useCallback((text: string) => {
     if (text.startsWith("Connect:")) {
-      setConnectorsOpen(true);
+      navigate("/integrations");
       return;
     }
     if (text.trim().startsWith("[LEARN_ANSWER]") || text.trim().startsWith("[LEARN_CHOICE]")) {
@@ -3326,11 +3323,9 @@ const ChatPage = () => {
             </DialogContent>
           </Dialog>
 
-          {(connectorsOpen || directoryOpen || slidesPickerOpen) && (
+          {(directoryOpen || slidesPickerOpen) && (
             <Suspense fallback={null}>
               <ChatGlobalModals
-                connectorsOpen={connectorsOpen}
-                setConnectorsOpen={setConnectorsOpen}
                 directoryOpen={directoryOpen}
                 setDirectoryOpen={setDirectoryOpen}
                 slidesPickerOpen={slidesPickerOpen}

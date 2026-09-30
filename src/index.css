@@ -381,12 +381,12 @@ html:not(.dark) .ambient-bg__blob { opacity: 0.10; }
 
 /* Shimmer for AI thinking text — fixed-width sweep so short strings shimmer too */
 @keyframes ai-shimmer {
-  from { background-position: 0 0; }
-  to { background-position: 180px 0; }
+  from { background-position: 140% 0; }
+  to { background-position: -40% 0; }
 }
 @keyframes ai-shimmer-rtl {
-  from { background-position: 0 0; }
-  to { background-position: -180px 0; }
+  from { background-position: -40% 0; }
+  to { background-position: 140% 0; }
 }
 
 /* Mobile partners marquee — pure CSS so it works inside overflow:hidden */
@@ -471,13 +471,14 @@ html:not(.dark) .ambient-bg__blob { opacity: 0.10; }
     hsl(var(--muted-foreground) / 0.45) 66%,
     hsl(var(--muted-foreground) / 0.45) 100%
   );
-  background-size: 180px 100%;
-  background-repeat: repeat-x;
+  background-size: 240% 100%;
+  background-repeat: no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  animation: ai-shimmer 1.3s linear infinite;
+  animation: ai-shimmer 1.15s linear infinite;
+  will-change: background-position;
 }
 
 [dir="rtl"] .ai-shimmer {
