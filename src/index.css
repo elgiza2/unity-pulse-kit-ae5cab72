@@ -7988,3 +7988,6 @@ a.bg-primary:hover,
   /* Scrollbars */
   * { scrollbar-width: thin; scrollbar-color: hsl(var(--foreground) / 0.15) transparent; }
 }
+@media (min-width: 1024px) {
+  [data-desktop-mono] svg { filter: grayscale(1); }
+}
