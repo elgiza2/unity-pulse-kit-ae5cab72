@@ -22,6 +22,8 @@ import { useNavigate } from "react-router-dom";
 import { stashFileForPreview } from "@/lib/filePreviewStore";
 import { useUserLang } from "@/lib/authI18n";
 import AgentThinkingLine from "@/components/chat/AgentThinkingLine";
+import { extractLifeActions, saveLifeActions } from "@/lib/life/agentActions";
+import { toast } from "sonner";
 
 
 import { clearActiveComputerRun, setActiveComputerRun } from "@/lib/computer/activeRun";
@@ -51,6 +53,19 @@ export default function ComputerTaskCard({ taskId }: Props) {
     }
   }, [taskId]);
   const navigate = useNavigate();
+  const lang0 = useUserLang();
+  useEffect(() => {
+    if (task?.status !== "completed" && task?.status !== "done") return;
+    const { actions } = extractLifeActions(task?.result_text || "");
+    if (!actions.length) return;
+    void saveLifeActions(taskId, actions).then((ok) => {
+      if (!ok) return;
+      const ar = lang0 === "ar-eg";
+      toast(ar ? "اتضاف للمهام" : "Added to your tasks", {
+        action: { label: ar ? "افتح" : "Open", onClick: () => navigate("/tasks") },
+      });
+    });
+  }, [task?.status, task?.result_text, taskId, lang0, navigate]);
   // Files open on their own full page (/file-preview/:id) instead of an overlay
   // stacked on the conversation, so the viewer is clean and shareable.
   const openPreview = (file: { url: string; name: string; type?: string | null }) => {
@@ -237,7 +252,9 @@ export default function ComputerTaskCard({ taskId }: Props) {
   // The agent pauses before sensitive actions and ends with [[APPROVAL: …]].
   const approvalMatch = /\[\[\s*APPROVAL\s*:\s*([\s\S]*?)\]\]/i.exec(rawResult || "");
   const approvalAction = approvalMatch?.[1]?.trim() || "";
-  const resultText = approvalMatch ? (rawResult || "").replace(approvalMatch[0], "").trim() : rawResult;
+  const afterApproval = approvalMatch ? (rawResult || "").replace(approvalMatch[0], "").trim() : rawResult;
+  // Tasks / alarms / goals the agent created: saved once, hidden from the text.
+  const { clean: resultText } = extractLifeActions(afterApproval || "");
 
   if (timedOut || task?.status === "failed") {
     const reason =

@@ -1,3 +1,4 @@
+import ReminderWatcher from "@/components/life/ReminderWatcher";
 import { useEffect, useState, Suspense } from "react";
 import { BrowserRouter } from "react-router-dom";
 
@@ -206,6 +207,7 @@ const App = () => {
                   <ConfirmProvider>
                     <ScrollToTop />
                     <PageViewTracker />
+                    <ReminderWatcher />
                     <InternalLinkInterceptor />
                     <MarketingTypographyScope />
 

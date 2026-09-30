@@ -151,6 +151,7 @@ export default function TasksPage() {
       return;
     }
     if (alarm) toast(t.alarmSoon);
+    if (when && "Notification" in window && Notification.permission === "default") void Notification.requestPermission();
     setSheet(null);
     setText("");
     setWhen("");

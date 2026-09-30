@@ -23,7 +23,7 @@ import {
   Mail as MailIcon,
   Monitor,
 } from "lucide-react";
-import { KeyRound } from "lucide-react";
+import { KeyRound, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useConfirm } from "@/components/common/ConfirmDialog";
 import { useActiveAccount } from "@/hooks/useActiveAccount";
@@ -100,6 +100,7 @@ const ManusSettingsMobile = () => {
     // Mail is hidden until its UI is reworked.
     // { icon: MailIcon, label: "Mail", trailing: "@megsyai.com", path: "/mail" },
     { icon: Lightbulb, label: "Memory", path: "/settings/memory" },
+    { icon: ListChecks, label: "Tasks", path: "/tasks" },
     { icon: PanelBottom, label: "Cloud browser", path: "/settings/cloud-browser" },
 
     { icon: Puzzle, label: "Skills", path: "/settings/skills" },
