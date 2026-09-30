@@ -206,6 +206,7 @@ const App = () => {
                   <ConfirmProvider>
                     <ScrollToTop />
                     <PageViewTracker />
+                    <ReminderWatcher />
                     <InternalLinkInterceptor />
                     <MarketingTypographyScope />
 
