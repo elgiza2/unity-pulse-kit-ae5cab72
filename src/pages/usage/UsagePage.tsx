@@ -1,14 +1,10 @@
-/** @doc Usage — plan, live credit balance, daily allowance and real credit history. */
+/** @doc Credits — balance hero, daily allowance, today's use and credit history. */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coins, ChevronLeft, CalendarClock, Gauge, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { goBackOr } from "@/lib/navigation";
-import {
-  claimDailyCredits,
-  fetchCreditOverview,
-  type CreditOverview,
-} from "@/lib/creditsSystem";
+import { claimDailyCredits, fetchCreditOverview, type CreditOverview } from "@/lib/creditsSystem";
+import { useUserLang } from "@/lib/authI18n";
 
 type Tx = {
   id: string;
@@ -18,31 +14,40 @@ type Tx = {
   created_at: string;
 };
 
-/** Never expose upstream provider or model names in the UI. */
-const cleanLabel = (raw: string | null, action: string | null) => {
-  const s = `${raw ?? ""} ${action ?? ""}`.toLowerCase();
-  if (/reward|follow|bonus/.test(s)) return "Reward";
-  if (/refresh|daily/.test(s)) return "Daily refresh";
-  if (/video|veo|sora|kling|hailuo|seedance|ltx/.test(s)) return "Video generation";
-  if (/headshot|inpaint|bg-remover|remover|colorizer|sketch|retouch|perspective|product-photo|thumbnail|hair|character-swap|storyboard|image-tool/.test(s))
-    return "Image editing";
-  if (/image|seedream|gpt-image|render/.test(s)) return "Image generation";
-  if (/slide|presentation/.test(s)) return "Presentation";
-  if (/research|report/.test(s)) return "Research";
-  if (/page|code|web/.test(s)) return "Web page";
-  if (/chat|message|manus|generation/.test(s)) return "Generation";
-  return "Task";
+const LABELS: Record<string, [string, string]> = {
+  reward: ["Reward", "مكافأة"],
+  daily: ["Daily credits", "رصيد يومي"],
+  video: ["Video", "فيديو"],
+  edit: ["Image editing", "تعديل صورة"],
+  image: ["Image", "صورة"],
+  slides: ["Presentation", "عرض تقديمي"],
+  research: ["Research", "بحث"],
+  web: ["Website", "موقع"],
+  chat: ["Chat", "محادثة"],
+  task: ["Task", "مهمة"],
 };
 
-const dayLabel = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+/** Never expose upstream provider or model names in the UI. */
+const kindOf = (raw: string | null, action: string | null) => {
+  const s = `${raw ?? ""} ${action ?? ""}`.toLowerCase();
+  if (/reward|follow|bonus/.test(s)) return "reward";
+  if (/refresh|daily/.test(s)) return "daily";
+  if (/video|veo|sora|kling|hailuo|seedance|ltx|minimax/.test(s)) return "video";
+  if (/headshot|inpaint|remover|colorizer|sketch|retouch|image-tool/.test(s)) return "edit";
+  if (/image|seedream|gpt-image|render/.test(s)) return "image";
+  if (/slide|presentation/.test(s)) return "slides";
+  if (/research|report/.test(s)) return "research";
+  if (/page|code|web/.test(s)) return "web";
+  if (/chat|message|agent|generation/.test(s)) return "chat";
+  return "task";
+};
 
-const timeLabel = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-
-const UsagePage = () => {
+export default function UsagePage() {
   const navigate = useNavigate();
-  const [overview, setOverview] = useState<CreditOverview | null>(null);
+  const lang = useUserLang();
+  const ar = lang === "ar-eg";
+  const loc = ar ? "ar-EG" : "en-US";
+  const [ov, setOv] = useState<CreditOverview | null>(null);
   const [rows, setRows] = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
   const [signedOut, setSignedOut] = useState(false);
@@ -50,9 +55,7 @@ const UsagePage = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         if (!cancelled) {
           setSignedOut(true);
@@ -60,9 +63,8 @@ const UsagePage = () => {
         }
         return;
       }
-      // Opening this screen is also the moment to hand out today's credits.
       await claimDailyCredits();
-      const [ov, tx] = await Promise.all([
+      const [o, tx] = await Promise.all([
         fetchCreditOverview(),
         supabase
           .from("credit_transactions")
@@ -72,7 +74,7 @@ const UsagePage = () => {
           .limit(80),
       ]);
       if (cancelled) return;
-      setOverview(ov);
+      setOv(o);
       setRows((tx.data as Tx[]) ?? []);
       setLoading(false);
     })();
@@ -81,182 +83,134 @@ const UsagePage = () => {
     };
   }, []);
 
-  const plan = (overview?.plan ?? "free").toLowerCase();
-  const isPaidPlan = plan !== "free";
-  const planLabel = plan === "free" ? "Free" : plan.toUpperCase();
-  const credits = overview?.credits ?? null;
-  const creditsLabel =
-    credits === null ? "—" : Math.round(credits).toLocaleString("en-US");
+  const plan = (ov?.plan ?? "free").toLowerCase();
+  const paid = plan !== "free";
+  const fmt = (n: number) => Math.round(n).toLocaleString(loc);
 
-  const refreshLabel = useMemo(() => {
-    if (!overview?.nextRefresh) return null;
-    const at = new Date(overview.nextRefresh);
-    const mins = Math.max(0, Math.round((at.getTime() - Date.now()) / 60000));
+  const refreshIn = useMemo(() => {
+    if (!ov?.nextRefresh) return null;
+    const mins = Math.max(0, Math.round((new Date(ov.nextRefresh).getTime() - Date.now()) / 60000));
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
-  }, [overview?.nextRefresh]);
+    return ar ? (h ? `${h} س ${m} د` : `${m} د`) : h ? `${h}h ${m}m` : `${m}m`;
+  }, [ov?.nextRefresh, ar]);
+
+  const usedPct = ov && ov.dailyAllowance > 0 ? Math.min(100, (ov.spentToday / ov.dailyAllowance) * 100) : 0;
 
   const groups = useMemo(() => {
     const map = new Map<string, Tx[]>();
-    rows.forEach((r) => {
-      const key = dayLabel(r.created_at);
-      map.set(key, [...(map.get(key) ?? []), r]);
-    });
+    for (const r of rows) {
+      const k = new Date(r.created_at).toLocaleDateString(loc, { month: "long", day: "numeric" });
+      map.set(k, [...(map.get(k) ?? []), r]);
+    }
     return Array.from(map.entries());
-  }, [rows]);
+  }, [rows, loc]);
 
   return (
-    <div className="usg-root" dir="ltr">
-      <style>{usageCss}</style>
-      <div className="usg-screen">
-        <header className="usg-top">
-          <button type="button" className="usg-iconbtn" aria-label="Back" onClick={() => goBackOr(navigate, "/settings")}>
-            <ChevronLeft className="w-5 h-5" strokeWidth={2} />
+    <div dir={ar ? "rtl" : "ltr"} className="min-h-[100dvh] bg-background text-foreground">
+      <div className="mx-auto w-full max-w-xl px-5 pb-24 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            aria-label="Back"
+            onClick={() => navigate("/settings", { replace: true })}
+            className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
+          >
+            <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
           </button>
-          <h1 className="usg-title">Usage</h1>
-          <span className="usg-iconbtn usg-ghost" />
-        </header>
+          <span className="rounded-full bg-muted px-3 py-1 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {paid ? plan : ar ? "مجاني" : "Free"}
+          </span>
+        </div>
 
-        <main className="usg-body">
-          <section className="usg-card usg-rise">
-            <div className="usg-plan">
-              <span className="usg-plan-name">{planLabel}</span>
-              <button type="button" className="usg-cta" onClick={() => navigate("/pricing")}>
-                {isPaidPlan ? "Manage" : "Upgrade"}
-              </button>
-            </div>
+        {/* Balance */}
+        <section className="mt-8 text-center">
+          <p className="text-[13px] font-medium text-muted-foreground">{ar ? "رصيدك" : "Your credits"}</p>
+          <p className="mt-2 text-[64px] font-semibold leading-none tracking-tight tabular-nums">
+            {ov ? fmt(ov.credits) : "—"}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/pricing")}
+            className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-[14px] font-semibold text-background transition-opacity hover:opacity-90"
+          >
+            <Sparkles className="h-4 w-4" />
+            {paid ? (ar ? "إدارة الاشتراك" : "Manage plan") : ar ? "ترقية" : "Upgrade"}
+          </button>
+        </section>
 
-            <div className="usg-line">
-              <Coins className="usg-licon" />
-              <span className="usg-llabel">
-                Credits
-                <small>Available to spend right now</small>
-              </span>
-              <span className="usg-lvalue">{creditsLabel}</span>
-            </div>
+        {/* Today */}
+        <section className="mt-10 rounded-[28px] bg-card p-5 ring-1 ring-border/60">
+          <div className="flex items-baseline justify-between">
+            <p className="text-[14px] font-semibold">{ar ? "النهارده" : "Today"}</p>
+            <p className="text-[13px] tabular-nums text-muted-foreground">
+              {ov ? `${fmt(ov.spentToday)} / ${fmt(ov.dailyAllowance)}` : "—"}
+            </p>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${usedPct}%` }} />
+          </div>
+          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+            <Stat label={ar ? "مهام" : "Tasks"} value={ov ? fmt(ov.tasksToday) : "—"} />
+            <Stat label={ar ? "الشهر ده" : "This month"} value={ov ? fmt(ov.spentThisMonth) : "—"} />
+            <Stat label={ar ? "التجديد" : "Refresh"} value={refreshIn ?? "—"} />
+          </div>
+        </section>
 
-            <div className="usg-line">
-              <CalendarClock className="usg-licon" />
-              <span className="usg-llabel">
-                Daily credits
-                <small>
-                  {overview
-                    ? `Tops up to ${overview.dailyAllowance} every day${refreshLabel ? ` · next ${refreshLabel}` : ""}`
-                    : "—"}
-                </small>
-              </span>
-              <span className="usg-lvalue">{overview ? overview.dailyAllowance : "—"}</span>
-            </div>
-
-            <div className="usg-line">
-              <Gauge className="usg-licon" />
-              <span className="usg-llabel">
-                Used today
-                <small>
-                  {overview
-                    ? `${overview.tasksToday} ${overview.tasksToday === 1 ? "task" : "tasks"} · ${Math.round(overview.spentThisMonth)} this month`
-                    : "—"}
-                </small>
-              </span>
-              <span className="usg-lvalue">
-                {overview ? Math.round(overview.spentToday) : "—"}
-              </span>
-            </div>
-          </section>
-
-          {loading ? (
-            <div className="usg-state"><Loader2 className="w-5 h-5 animate-spin" /></div>
-          ) : signedOut ? (
-            <div className="usg-state">Sign in to see your credits</div>
-          ) : groups.length === 0 ? (
-            <div className="usg-state">No usage yet</div>
-          ) : (
-            groups.map(([day, items], gi) => (
-              <section key={day} className="usg-group usg-rise" style={{ animationDelay: `${60 + gi * 40}ms` }}>
-                <h2 className="usg-day">{day}</h2>
-                <div className="usg-card usg-list">
+        {/* History */}
+        <h2 className="mb-3 mt-10 px-1 text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
+          {ar ? "السجل" : "History"}
+        </h2>
+        {loading ? (
+          <div className="grid h-32 place-items-center">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : signedOut ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            {ar ? "سجّل دخولك عشان تشوف رصيدك" : "Sign in to see your credits"}
+          </p>
+        ) : groups.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">{ar ? "لسه مفيش استخدام" : "No usage yet"}</p>
+        ) : (
+          <div className="space-y-6">
+            {groups.map(([day, items]) => (
+              <div key={day}>
+                <p className="mb-2 px-1 text-[12.5px] text-muted-foreground">{day}</p>
+                <div className="divide-y divide-border/60 overflow-hidden rounded-[22px] bg-card ring-1 ring-border/60">
                   {items.map((it) => {
                     const amount = Number(it.amount) || 0;
-                    // Grants are stored as negatives, spending as positives.
-                    const isGrant = amount < 0;
+                    const grant = amount < 0; // grants are stored as negatives
+                    const label = LABELS[kindOf(it.description, it.action_type)][ar ? 1 : 0];
                     return (
-                      <div key={it.id} className="usg-item">
-                        <span className="usg-item-title">
-                          {cleanLabel(it.description, it.action_type)}
-                          <small>{timeLabel(it.created_at)}</small>
+                      <div key={it.id} className="flex items-center gap-3 px-4 py-3.5">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[14px] font-medium">{label}</span>
+                          <span className="block text-[12px] text-muted-foreground">
+                            {new Date(it.created_at).toLocaleTimeString(loc, { hour: "numeric", minute: "2-digit" })}
+                          </span>
                         </span>
-                        <span className={`usg-item-cost ${isGrant ? "usg-plus" : ""}`}>
-                          {isGrant ? "+" : "−"}
-                          {Math.round(Math.abs(amount))}
+                        <span className={`text-[14px] font-semibold tabular-nums ${grant ? "text-primary" : "text-foreground"}`}>
+                          {grant ? "+" : "−"}
+                          {fmt(Math.abs(amount))}
                         </span>
                       </div>
                     );
                   })}
                 </div>
-              </section>
-            ))
-          )}
-          <div className="usg-spacer" />
-        </main>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
-};
+}
 
-const usageCss = `
-.usg-root {
-  min-height: 100dvh; background: var(--mn-bg); color: var(--mn-fg);
-  display: flex; justify-content: center;
-  font-family: -apple-system, "SF Pro Display", Inter, "Segoe UI", Roboto, sans-serif;
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-muted/60 px-2 py-3">
+      <p className="text-[15px] font-semibold tabular-nums">{value}</p>
+      <p className="mt-0.5 text-[11.5px] text-muted-foreground">{label}</p>
+    </div>
+  );
 }
-.usg-screen { width: 100%; max-width: 420px; }
-.usg-top {
-  position: sticky; top: 0; z-index: 5; background: var(--mn-bg);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 8px 8px;
-}
-.usg-iconbtn {
-  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
-  background: transparent; border: 0; color: var(--mn-fg); cursor: pointer; -webkit-tap-highlight-color: transparent;
-}
-.usg-ghost { pointer-events: none; }
-.usg-title { font-size: 16px; font-weight: 600; margin: 0; }
-.usg-body { padding: 2px 12px 28px; display: flex; flex-direction: column; gap: 14px; }
-.usg-card { background: var(--mn-card); border-radius: 14px; padding: 12px 12px 4px; }
-.usg-plan { display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px dashed var(--mn-sep); }
-.usg-plan-name { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
-.usg-cta {
-  background: var(--mn-cta-bg); color: var(--mn-cta-fg); border: 0; border-radius: 9px;
-  font-size: 12.5px; font-weight: 600; padding: 7px 13px; cursor: pointer;
-}
-.usg-banner {
-  width: 100%; margin: 10px 0 4px; display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; background: color-mix(in srgb, var(--mn-accent) 14%, transparent); color: var(--mn-accent); border: 0; border-radius: 10px;
-  padding: 10px 12px; font-size: 12.5px; font-weight: 500; cursor: pointer; text-align: left;
-}
-.usg-line { display: flex; align-items: center; gap: 8px; padding: 10px 2px; }
-.usg-line-sub { padding-top: 0; }
-.usg-licon { width: 16px; height: 16px; color: var(--mn-fg); flex: none; }
-.usg-llabel { flex: 1; font-size: 13.5px; display: flex; flex-direction: column; gap: 1px; }
-.usg-llabel small { font-size: 10.5px; color: var(--mn-muted); }
-.usg-lhelp { width: 12px; height: 12px; color: var(--mn-faint); }
-.usg-lvalue { font-size: 13.5px; font-weight: 600; }
-.usg-muted { color: var(--mn-muted); font-weight: 400; padding-inline-start: 24px; }
-.usg-group { display: flex; flex-direction: column; gap: 6px; }
-.usg-day { font-size: 11.5px; color: var(--mn-muted); margin: 0 4px; font-weight: 500; }
-.usg-list { padding: 2px 12px; }
-.usg-item { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--mn-sep); }
-.usg-item:last-child { border-bottom: 0; }
-.usg-item-title { flex: 1; font-size: 13.5px; line-height: 1.35; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.usg-item-title small { font-size: 10.5px; color: var(--mn-muted); }
-.usg-item-cost { font-size: 13px; color: var(--mn-muted); font-variant-numeric: tabular-nums; }
-.usg-item-cost.usg-plus { color: #10b981; }
-.usg-state { display: flex; align-items: center; justify-content: center; padding: 36px 0; color: var(--mn-muted); font-size: 13px; }
-.usg-spacer { height: env(safe-area-inset-bottom, 0px); }
-.usg-rise { animation: usg-rise .32s cubic-bezier(.22,.61,.36,1) both; }
-@keyframes usg-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .usg-rise { animation: none; } }
-`;
-
-export default UsagePage;
