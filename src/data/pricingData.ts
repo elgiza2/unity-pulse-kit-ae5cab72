@@ -4,9 +4,7 @@
 // Imported by /pricing (desktop + mobile), workspace plans, and the
 // support chat knowledge base so they NEVER drift apart.
 //
-// Pricing model (clean, two paid plans):
-//   Pro  $20 / month  · first month $7  · $160 / year (4 months free)
-//   Max  $40 / month  · first month $17 · $320 / year (4 months free)
+// Pricing model: one paid plan, Pro at $7 for month one then $15/month.
 // =====================================================================
 
 export type PlanTier = "starter" | "pro" | "elite" | "business";
@@ -14,7 +12,7 @@ export type PlanTier = "starter" | "pro" | "elite" | "business";
 /** Monthly Megsy Credits included with each tier. */
 export const PLAN_MONTHLY_CREDITS: Record<PlanTier, number> = {
   starter: 70,
-  pro: 240,
+  pro: 300,
   elite: 600,
   business: 1200,
 };
@@ -71,9 +69,10 @@ const PRO_FEATURES = [
   "3 background agents working in parallel",
   "Deep Research with citation-backed reports",
   "Unlimited chat with every flagship model",
-  "Unlimited image generation — no caps, no credits",
-  "Unlimited videos for 7 days",
-  `Up to 40 premium videos a month (${PLAN_MONTHLY_CREDITS.pro} MC)`,
+  "300 Megsy Credits every month",
+  "Images cost 2 credits each",
+  "Videos cost 25 credits each",
+  "Agent tasks cost 1–50 credits, based on the work",
   "Docs, Slides & Megsy Coder — export, build and deploy",
   "Team workspace with shared projects and files",
   "Priority support · cancel anytime",
@@ -109,15 +108,15 @@ export const PLANS: PlanCardConfig[] = [
     bg: "linear-gradient(165deg, #1e64ff 0%, #2563eb 55%, #1d4fd8 100%)",
     text: "#ffffff",
     subText: "rgba(255, 255, 255, 0.78)",
-    monthlyPrice: 20,
-    yearlyPrice: 160,
+    monthlyPrice: 15,
+    yearlyPrice: 120,
     firstMonthPrice: 7,
 
     monthlyCredits: `${PLAN_MONTHLY_CREDITS.pro} MC / month`,
-    yearlyCredits: "Save $80 + 720 bonus MC",
+    yearlyCredits: "3,600 credits / year · save $60",
     features: PRO_FEATURES,
     monthlyFeatures: PRO_FEATURES,
-    yearlyFeatures: [...yearlyIntro(80, 720), ...PRO_FEATURES.slice(0, 7)],
+    yearlyFeatures: [...yearlyIntro(60, 0).slice(0, 1), ...PRO_FEATURES],
 
     ctaBg: "#0b1020",
     ctaText: "#ffffff",
@@ -246,11 +245,11 @@ export const SERVICES_GUIDE: { name: string; desc: string }[] = [
   },
   {
     name: "Unlimited Chat",
-    desc: "Talk to Megsy AI with every flagship model and no daily caps on Pro. The free plan uses Megsy Lite.",
+    desc: "Chat is free for everyone and never spends credits.",
   },
   {
     name: "Image Generation",
-    desc: "Generate high-quality images on any paid plan. Images draw from your monthly MC balance.",
+    desc: "Generate a high-quality image for 2 credits.",
   },
   {
     name: "Slides & Presentations",
@@ -266,7 +265,7 @@ export const SERVICES_GUIDE: { name: string; desc: string }[] = [
   },
   {
     name: "Video Generation",
-    desc: "Premium video models use MC from your monthly balance — about 40 videos a month. DeAPI video models are always free and unlimited.",
+    desc: "Each video costs 25 credits. Pro members receive 300 credits every month.",
   },
   {
     name: "Megsy OS",
@@ -274,7 +273,7 @@ export const SERVICES_GUIDE: { name: string; desc: string }[] = [
   },
   {
     name: "Megsy Credits (MC)",
-    desc: "Image generation is unlimited. MC is spent on premium video and premium model runs only, and refreshes at the start of each billing cycle.",
+    desc: "Chat is free. Images cost 2, videos cost 25, and agent tasks cost 1–50 credits. Daily credits refresh instead of stacking.",
   },
   {
     name: "Team Workspace",
@@ -285,7 +284,7 @@ export const SERVICES_GUIDE: { name: string; desc: string }[] = [
 export const FAQS: { q: string; a: string }[] = [
   {
     q: "How does the introductory first month work?",
-    a: "Eligible accounts can start with 7 days of unlimited video generation for $7. After the offer, Pro renews at the standard monthly price shown on the plan card. You can cancel anytime from Billing.",
+    a: "Your first month costs $7, then Pro renews at $15 a month. Each month includes 300 credits. You can cancel anytime.",
   },
   {
     q: "Can I change or cancel my plan anytime?",
@@ -293,15 +292,15 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What are Megsy Credits (MC)?",
-    a: "Chat and image generation are unlimited on every paid plan. MC is a separate monthly balance used for premium video generation and premium model runs — 240 MC on Pro (about 40 videos). DeAPI video models never cost MC.",
+    a: "Chat is free. One image costs 2 credits, one video costs 25, and agent work costs 1–50 depending on the task.",
   },
   {
     q: "What happens when I run out of MC?",
-    a: "Chat, images, docs, slides and research stay available — images are always unlimited, and free DeAPI video models keep working. Only premium video and premium model runs need MC, so you can top up anytime from Billing or wait for your next renewal.",
+    a: "Chat stays free. Pro members can buy a 100, 300 or 700 credit pack, or wait for the monthly renewal.",
   },
   {
     q: "Do unused credits roll over?",
-    a: "No. Monthly MC reset at the start of each cycle. Yearly plans get bonus MC delivered upfront (+720) on top of four months free.",
+    a: "Daily free credits refresh to 5 and do not stack. Purchased credits stay available; plan credits refresh with the subscription.",
   },
   {
     q: "Do prices include tax?",

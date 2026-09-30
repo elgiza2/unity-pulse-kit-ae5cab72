@@ -40,8 +40,7 @@ used, `FOR UPDATE SKIP LOCKED`).
 
 Consequences:
 
-- Chat streams through the Supabase Edge Function (`chat-alibaba`, fast lane
-  `chat-fast`). Media goes through `media-image` / `media-video` functions.
+- Chat stays free. Credits use daily, bonus, plan, and purchased buckets; image costs 2, video 25, and agent work 1–50.
 - The local `/api/chat` proxy (`src/lib/chat/proxyCore.ts`,
   `src/lib/keys/abliterationKey.ts`) is **off by default**. Enable only for
   offline provider work with `VITE_LOCAL_CHAT_PROXY=1`.

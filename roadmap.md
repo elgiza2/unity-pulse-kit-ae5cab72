@@ -119,8 +119,8 @@
 - [ ] Publish the site so the every-minute reminder check reaches it
 
 ## Credit system (September 30, 2026)
-- [ ] Define one credit policy for free and paid users.
-- [ ] Centralize plan grants and per-service costs.
-- [ ] Apply safe initial balances to all existing users without double grants.
-- [ ] Enforce atomic charging/refunds across chat, agent, image, video, slides, and files.
-- [ ] Update pricing and usage pages from the same catalog.
+- [x] Define one credit policy for free and paid users.
+- [x] Centralize plan grants and per-service costs.
+- [x] Apply safe initial balances to all existing users without double grants.
+- [x] Enforce charging/refunds for the active agent, image, and video paths; chat stays free.
+- [x] Update desktop pricing and shared price copy from the unified catalog.
