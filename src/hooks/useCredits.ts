@@ -86,8 +86,6 @@ export function useCredits() {
   const hasEnoughCredits = (cost: number) => {
     // While loading, don't block — assume yes; the server will re-validate
     if (loading || credits === null) return true;
-    // Paid plans have broader access; video remains server-validated by MC/fair-use rules.
-    if (isPaid) return true;
     return credits >= cost;
   };
 

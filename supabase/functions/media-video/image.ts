@@ -69,7 +69,12 @@ async function generate(key: string, prompt: string, aspect: string | undefined,
   throw new Error("Image generation timed out");
 }
 
-export async function handleImage(body: any, out: (b: unknown, s?: number) => Response) {
+export async function handleImage(
+  db: any,
+  userId: string,
+  body: any,
+  out: (b: unknown, s?: number) => Response,
+) {
   const prompt = String(body?.prompt ?? "").trim();
   if (!prompt) return out({ error: true, message: "prompt is required" }, 400);
   const rawRefs = body?.reference_image_urls ?? body?.reference_image_url ?? body?.image_url;
@@ -78,13 +83,26 @@ export async function handleImage(body: any, out: (b: unknown, s?: number) => Re
     .filter((x: string) => /^https?:\/\//.test(x));
   const keys = await vaultKeys("runway");
   if (!keys.length) return out({ error: true, message: "No active Runway keys are configured." }, 503);
+  const cost = 2;
+  const spent = await db.rpc("spend_credits_auto", {
+    p_user_id: userId,
+    p_amount: cost,
+    p_action_type: "image_generation",
+    p_description: "Megsy image",
+  });
+  if (spent.error || spent.data?.success === false) {
+    return out(
+      { error: true, paywall: true, required_credits: cost, message: "You need 2 credits to create an image." },
+      402,
+    );
+  }
   let lastError = "Image generation failed";
   for (const key of keys) {
     await noteKeyAttempt(key);
     try {
       const url = await generate(key.key, prompt, body?.aspect_ratio, refs);
       await noteKeyOk(key);
-      return out({ image_url: url, image_urls: [url], url, provider: "runway", model_slug: "runway-gpt-image-2" });
+      return out({ image_url: url, image_urls: [url], url, provider: "runway", model_slug: "runway-gpt-image-2", credits_charged: cost });
     } catch (error) {
       lastError = error instanceof Error ? error.message : lastError;
       const status = Number((error as any)?.providerStatus || 500);
@@ -92,5 +110,11 @@ export async function handleImage(body: any, out: (b: unknown, s?: number) => Re
       if (status === 400) break;
     }
   }
+  await db.rpc("grant_user_credits", {
+    p_user_id: userId,
+    p_amount: cost,
+    p_action_type: "image_generation_refund",
+    p_description: "Refund for failed image",
+  });
   return out({ error: true, message: lastError }, 502);
 }

@@ -160,16 +160,18 @@ Deno.serve(async (request) => {
 
   if (body.kind === "image") {
     const { handleImage } = await import("./image.ts");
-    return handleImage(body, out);
+    return handleImage(db, user.id, body, out);
   }
   // The single agent (Browser Use Cloud) lives here too.
   if (body.kind === "agent") {
     const { handleAgent } = await import("./agent.ts");
     return handleAgent(db, user.id, body, out);
   }
-  // Fixed tiers: free = MiniMax (1/day), subscribers = Seedance 2.5 (5/day).
-  // The client-selected model is ignored.
-  return handleTier(user.id, body);
+  // One fixed 25-credit video price. Subscribers use Seedance; free users use MiniMax.
+  const { data: profile } = await db.from("profiles").select("plan").eq("id", user.id).maybeSingle();
+  const paid = String(profile?.plan || "free") !== "free";
+  const selectedModel = paid ? "wavespeed-seedance-2.0-mini" : "wavespeed-hailuo-2.3";
+  return handleWave(user.id, selectedModel, waveRules[selectedModel], body);
   const model = String(body.model_slug || "wavespeed-minimax-h3");
   const rule = rules[model];
   if (!rule) return out({ error: true, message: "Choose a supported Runway video model." }, 400);
@@ -315,22 +317,7 @@ async function handleWave(
   if (!keys.length)
     return out({ error: true, message: "No active WaveSpeed keys are configured." }, 503);
 
-  const quota = await db.rpc("consume_video_quota", {
-    _model: model,
-    _unlimited: false,
-    _user_id: userId,
-  });
-  if (quota.error || !quota.data?.allowed)
-    return out(
-      {
-        error: true,
-        paywall: true,
-        message:
-          quota.data?.message || quota.data?.error || quota.error?.message || "Video credits required.",
-      },
-      402,
-    );
-  const cost = quota.data.offer ? 0 : Math.max(Number(quota.data.cost || 0), rule.cost);
+  const cost = 25;
   if (cost > 0) {
     const spent = await db.rpc("spend_credits_auto", {
       p_user_id: userId,
