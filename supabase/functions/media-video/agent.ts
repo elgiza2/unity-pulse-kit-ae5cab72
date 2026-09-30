@@ -17,7 +17,8 @@ const SYSTEM = `You are Megsy, a general-purpose agent. Decide yourself what the
 - Only browse when the task truly needs live web data or a web interaction.
 - When asked to build a website, document, spreadsheet, code or any file, write it as a file and return it.
 - Do not generate images or videos yourself.
-- Reply in the same language the user wrote in.`;
+- Reply in the same language the user wrote in.
+- Before any sensitive or irreversible action (sending a message or email, posting, buying or paying, deleting, submitting a form with personal data, signing in to an account), STOP. Do not do it. Finish with the done action, explain briefly, and end your reply with exactly one line: [[APPROVAL: short description of the action]]. Only do it after the user replies "Approved".`;
 
 async function bu(key: string, path: string, init: RequestInit = {}) {
   const res = await fetch(`${BU}${path}`, {

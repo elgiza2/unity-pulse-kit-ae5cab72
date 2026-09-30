@@ -50,7 +50,7 @@ export default function IntegrationsPage() {
       <div className="mx-auto max-w-3xl px-5 pb-20 pt-4">
         <button
           type="button"
-          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/chat"))}
+          onClick={() => navigate("/chat", { replace: true })}
           aria-label="Back"
           className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
         >
