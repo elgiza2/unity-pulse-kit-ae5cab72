@@ -4319,6 +4319,122 @@ export type Database = {
         }
         Relationships: []
       }
+      life_goals: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      life_ideas: {
+        Row: {
+          body: string | null
+          created_at: string
+          dismissed: boolean
+          emoji: string
+          id: string
+          prompt: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          dismissed?: boolean
+          emoji?: string
+          id?: string
+          prompt: string
+          title: string
+          user_id?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          dismissed?: boolean
+          emoji?: string
+          id?: string
+          prompt?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      life_tasks: {
+        Row: {
+          created_at: string
+          due_at: string | null
+          goal_id: string | null
+          id: string
+          kind: string
+          notes: string | null
+          remind_at: string | null
+          repeat_rule: string | null
+          source: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_at?: string | null
+          goal_id?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          remind_at?: string | null
+          repeat_rule?: string | null
+          source?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          due_at?: string | null
+          goal_id?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          remind_at?: string | null
+          repeat_rule?: string | null
+          source?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "life_tasks_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "life_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       local_device_commands: {
         Row: {
           created_at: string
@@ -8557,6 +8673,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      scheduled_nudges: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          run_at: string
+          sent_at: string | null
+          task_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          run_at: string
+          sent_at?: string | null
+          task_id?: string | null
+          title: string
+          user_id?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          run_at?: string
+          sent_at?: string | null
+          task_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_nudges_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "life_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_user_messages: {
         Row: {
