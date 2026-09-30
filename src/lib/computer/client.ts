@@ -36,8 +36,10 @@ export interface ComputerEvent {
 
 const SIGN_IN_MESSAGE = "سجّل الدخول أولاً لتشغيل مهام الكمبيوتر. / Please sign in to run computer tasks.";
 
-const SUPABASE_ANON_KEY = edgeAnonKey("computer-agent");
-const COMPUTER_AGENT_URL = edgeUrl("computer-agent");
+// The single agent (Browser Use Cloud, DeepSeek) is served by `media-video`
+// under `kind: "agent"`.
+const SUPABASE_ANON_KEY = edgeAnonKey("media-video");
+const COMPUTER_AGENT_URL = edgeUrl("media-video");
 
 
 async function call<T>(body: Record<string, unknown>): Promise<T> {
@@ -63,7 +65,7 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
       Authorization: `Bearer ${token}`,
       apikey: SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ ...body, token }),
+    body: JSON.stringify({ ...body, kind: "agent" }),
   });
   const data = (await resp.json().catch(() => ({}))) as Record<string, unknown>;
   if (resp.status === 401) throw new Error(SIGN_IN_MESSAGE);
