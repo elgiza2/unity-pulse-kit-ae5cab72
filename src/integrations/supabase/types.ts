@@ -11852,6 +11852,7 @@ export type Database = {
         }
         Returns: Json
       }
+      consume_daily_video: { Args: { _user_id: string }; Returns: Json }
       consume_free_image_use: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: Json
@@ -12160,6 +12161,10 @@ export type Database = {
         Returns: string
       }
       referral_required_task_keys: { Args: never; Returns: string[] }
+      refund_daily_video: {
+        Args: { _period: string; _user_id: string }
+        Returns: undefined
+      }
       search_attachment_chunks: {
         Args: {
           p_conversation_id: string
