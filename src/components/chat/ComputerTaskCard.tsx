@@ -22,6 +22,8 @@ import { useNavigate } from "react-router-dom";
 import { stashFileForPreview } from "@/lib/filePreviewStore";
 import { useUserLang } from "@/lib/authI18n";
 import AgentThinkingLine from "@/components/chat/AgentThinkingLine";
+import { extractLifeActions, saveLifeActions } from "@/lib/life/agentActions";
+import { toast } from "sonner";
 
 
 import { clearActiveComputerRun, setActiveComputerRun } from "@/lib/computer/activeRun";
@@ -237,7 +239,9 @@ export default function ComputerTaskCard({ taskId }: Props) {
   // The agent pauses before sensitive actions and ends with [[APPROVAL: …]].
   const approvalMatch = /\[\[\s*APPROVAL\s*:\s*([\s\S]*?)\]\]/i.exec(rawResult || "");
   const approvalAction = approvalMatch?.[1]?.trim() || "";
-  const resultText = approvalMatch ? (rawResult || "").replace(approvalMatch[0], "").trim() : rawResult;
+  const afterApproval = approvalMatch ? (rawResult || "").replace(approvalMatch[0], "").trim() : rawResult;
+  // Tasks / alarms / goals the agent created: saved once, hidden from the text.
+  const { clean: resultText, actions: lifeActions } = extractLifeActions(afterApproval || "");
 
   if (timedOut || task?.status === "failed") {
     const reason =
