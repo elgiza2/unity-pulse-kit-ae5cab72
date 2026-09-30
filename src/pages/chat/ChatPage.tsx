@@ -2345,6 +2345,18 @@ const ChatPage = () => {
 
   const handleSend = (text?: string) => handleSendWithText(text);
 
+  // Approval cards (Allow / Deny) send their decision straight to the agent.
+  const handleSendRef = useRef(handleSend);
+  handleSendRef.current = handleSend;
+  useEffect(() => {
+    const onSend = (e: Event) => {
+      const text = (e as CustomEvent<{ text?: string }>).detail?.text;
+      if (text) void handleSendRef.current(text);
+    };
+    window.addEventListener("megsy:send-message", onSend);
+    return () => window.removeEventListener("megsy:send-message", onSend);
+  }, []);
+
   // Warm the modules the send path imports so the FIRST send is as fast as
   // every later one (see prewarmSendPath docs).
   useEffect(() => {

@@ -92,7 +92,7 @@ export default function IntegrationDetailPage() {
       <div className="mx-auto max-w-xl px-5 pb-20 pt-4">
         <button
           type="button"
-          onClick={() => navigate("/integrations")}
+          onClick={() => navigate("/integrations", { replace: true })}
           aria-label="Back"
           className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
         >

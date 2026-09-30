@@ -1,13 +1,13 @@
-/** @doc Memory — user memories with a dedicated knowledge section. */
-import { useCallback, useEffect, useState } from "react";
+/** @doc Memory — what Megsy remembers about the user (user_knowledge): add, edit, toggle, delete, search. */
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Lightbulb, Loader2, Plus, X } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { goBackOr } from "@/lib/navigation";
 import { notifyTurnContextChanged } from "@/lib/chat/turnContext";
+import { useUserLang } from "@/lib/authI18n";
 
-type KnowledgeRow = {
+type Row = {
   id: string;
   name: string;
   use_when: string;
@@ -16,19 +16,74 @@ type KnowledgeRow = {
   created_at: string;
 };
 
-function timeLabel(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-}
+type Draft = { id?: string; name: string; use_when: string; content: string };
 
-const MemoryPage = () => {
+const T = {
+  en: {
+    title: "Memory",
+    sub: "Things Megsy remembers and uses in your chats.",
+    search: "Search memory",
+    add: "Add memory",
+    edit: "Edit memory",
+    empty: "Nothing here yet",
+    emptySub: "Add a fact or instruction and Megsy will use it when it fits.",
+    name: "Title",
+    namePh: "e.g. My writing style",
+    when: "Use when",
+    whenPh: "When should Megsy use this?",
+    content: "What to remember",
+    contentPh: "Write the fact or instruction",
+    save: "Save",
+    saving: "Saving…",
+    del: "Delete",
+    confirmDel: "Delete this memory?",
+    required: "Fill in “Use when” and “What to remember”",
+    failed: "Could not save",
+    delFailed: "Could not delete",
+    on: "On",
+    off: "Off",
+    noResults: "No matches",
+    untitled: "Untitled",
+  },
+  ar: {
+    title: "الذاكرة",
+    sub: "الحاجات اللي ميغسي فاكرها وبيستخدمها في محادثاتك.",
+    search: "دوّر في الذاكرة",
+    add: "إضافة ذكرى",
+    edit: "تعديل الذكرى",
+    empty: "لسه مفيش حاجة",
+    emptySub: "ضيف معلومة أو تعليمات وميغسي هيستخدمها لما تناسب.",
+    name: "العنوان",
+    namePh: "مثلًا: أسلوب كتابتي",
+    when: "تُستخدم لما",
+    whenPh: "إمتى ميغسي يستخدم دي؟",
+    content: "المطلوب تفتكره",
+    contentPh: "اكتب المعلومة أو التعليمات",
+    save: "حفظ",
+    saving: "بيحفظ…",
+    del: "حذف",
+    confirmDel: "تحذف الذكرى دي؟",
+    required: "اكتب «تُستخدم لما» و«المطلوب تفتكره»",
+    failed: "مقدرناش نحفظ",
+    delFailed: "مقدرناش نحذف",
+    on: "شغّالة",
+    off: "متوقفة",
+    noResults: "مفيش نتايج",
+    untitled: "بدون عنوان",
+  },
+};
+
+export default function MemoryPage() {
   const navigate = useNavigate();
-  const [rows, setRows] = useState<KnowledgeRow[]>([]);
+  const lang = useUserLang();
+  const ar = lang === "ar-eg";
+  const t = ar ? T.ar : T.en;
+
+  const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
-  const [name, setName] = useState("");
-  const [useWhen, setUseWhen] = useState("");
-  const [content, setContent] = useState("");
 
   const load = useCallback(async () => {
     const { data: auth } = await supabase.auth.getUser();
@@ -42,7 +97,7 @@ const MemoryPage = () => {
       .select("id,name,use_when,content,enabled,created_at")
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
-    setRows((data as unknown as KnowledgeRow[]) ?? []);
+    setRows((data as unknown as Row[]) ?? []);
     setLoading(false);
   }, []);
 
@@ -50,289 +105,241 @@ const MemoryPage = () => {
     void load();
   }, [load]);
 
-  const openSheet = () => {
-    setName("");
-    setUseWhen("");
-    setContent("");
-    setSheetOpen(true);
-  };
+  const shown = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return rows;
+    return rows.filter((r) => `${r.name} ${r.use_when} ${r.content}`.toLowerCase().includes(s));
+  }, [rows, q]);
 
   const save = async () => {
-    if (!useWhen.trim() || !content.trim()) {
-      toast.error("Please fill in the required fields");
+    if (!draft) return;
+    if (!draft.use_when.trim() || !draft.content.trim()) {
+      toast.error(t.required);
       return;
     }
     setSaving(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      const uid = auth.user?.id;
-      if (!uid) throw new Error("no user");
-      const { error } = await supabase.from("user_knowledge").insert({
-        user_id: uid,
-        name: name.trim().slice(0, 120),
-        use_when: useWhen.trim().slice(0, 500),
-        content: content.trim().slice(0, 5000),
-      });
-      if (error) throw error;
-      setSheetOpen(false);
+      const payload = {
+        name: draft.name.trim().slice(0, 120),
+        use_when: draft.use_when.trim().slice(0, 500),
+        content: draft.content.trim().slice(0, 5000),
+      };
+      if (draft.id) {
+        const { error } = await supabase.from("user_knowledge").update(payload).eq("id", draft.id);
+        if (error) throw error;
+      } else {
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth.user?.id;
+        if (!uid) throw new Error("no user");
+        const { error } = await supabase.from("user_knowledge").insert({ user_id: uid, ...payload });
+        if (error) throw error;
+      }
+      setDraft(null);
       await load();
       notifyTurnContextChanged();
     } catch {
-      toast.error("Could not save knowledge");
+      toast.error(t.failed);
     } finally {
       setSaving(false);
     }
   };
 
-  const toggle = async (row: KnowledgeRow) => {
-    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, enabled: !r.enabled } : r)));
-    const { error } = await supabase
-      .from("user_knowledge")
-      .update({ enabled: !row.enabled })
-      .eq("id", row.id);
+  const remove = async (id: string) => {
+    if (!window.confirm(t.confirmDel)) return;
+    const prev = rows;
+    setRows((r) => r.filter((x) => x.id !== id));
+    setDraft(null);
+    const { error } = await supabase.from("user_knowledge").delete().eq("id", id);
     if (error) {
-      setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, enabled: row.enabled } : r)));
+      setRows(prev);
+      toast.error(t.delFailed);
+      return;
+    }
+    notifyTurnContextChanged();
+  };
+
+  const toggle = async (row: Row) => {
+    setRows((p) => p.map((r) => (r.id === row.id ? { ...r, enabled: !r.enabled } : r)));
+    const { error } = await supabase.from("user_knowledge").update({ enabled: !row.enabled }).eq("id", row.id);
+    if (error) {
+      setRows((p) => p.map((r) => (r.id === row.id ? { ...r, enabled: row.enabled } : r)));
+      toast.error(t.failed);
       return;
     }
     notifyTurnContextChanged();
   };
 
   return (
-    <div className="kn-root" dir="ltr">
-      <style>{knCss}</style>
-
-      <header className="kn-topbar">
-        <button className="kn-icon-btn" aria-label="Back" onClick={() => goBackOr(navigate, "/settings")}>
-          <ChevronLeft className="w-5 h-5" strokeWidth={2} />
-        </button>
-        <h1 className="kn-title">Memory</h1>
-        <button className="kn-icon-btn" aria-label="Add knowledge" onClick={openSheet}>
-          <Plus className="w-5 h-5" strokeWidth={2} />
-        </button>
-      </header>
-
-      <section className="kn-main">
-        <div className="kn-section-head">
-          <h2>Knowledge</h2>
-          <p>Facts and instructions Megsy can remember and use in future chats.</p>
+    <div dir={ar ? "rtl" : "ltr"} className="min-h-[100dvh] bg-background text-foreground">
+      <div className="mx-auto w-full max-w-2xl px-5 pb-28 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            aria-label="Back"
+            onClick={() => navigate("/settings", { replace: true })}
+            className="grid h-10 w-10 place-items-center rounded-full text-foreground/80 hover:bg-muted"
+          >
+            <ArrowLeft className={`h-5 w-5 ${ar ? "rotate-180" : ""}`} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDraft({ name: "", use_when: "", content: "" })}
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background transition-opacity hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> {t.add}
+          </button>
         </div>
-        {loading ? (
-          <div className="kn-state">
-            <Loader2 className="w-5 h-5 animate-spin" />
+
+        <h1 className="mt-6 text-[30px] font-semibold tracking-tight">{t.title}</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">{t.sub}</p>
+
+        {rows.length > 0 && (
+          <div className="relative mt-6">
+            <Search className="absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t.search}
+              className="h-11 w-full rounded-full bg-muted/70 pe-4 ps-11 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+            />
           </div>
-        ) : rows.length === 0 ? (
-          <div className="kn-empty">
-            <Lightbulb className="kn-empty-icon" strokeWidth={1.4} />
-            <p className="kn-empty-text">No knowledge yet</p>
-            <button className="kn-cta" onClick={openSheet}>
-              <Plus className="w-4 h-4" strokeWidth={2.2} />
-              Add now
-            </button>
-          </div>
-        ) : (
-          <ul className="kn-list">
-            {rows.map((r, i) => (
-              <li key={r.id} className="kn-card" style={{ animationDelay: `${i * 40}ms` }}>
-                <p className="kn-card-name">{r.name || "Untitled"}</p>
-                <p className="kn-card-when">{r.use_when}</p>
-                <div className="kn-card-foot">
-                  <button
-                    className={`kn-status ${r.enabled ? "is-on" : ""}`}
-                    onClick={() => toggle(r)}
-                  >
-                    <span className="kn-dot" />
-                    {r.enabled ? "Enabled" : "Disabled"}
-                  </button>
-                  <span className="kn-time">{timeLabel(r.created_at)}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
         )}
-      </section>
 
-      {sheetOpen && (
-        <div className="kn-sheet-wrap">
-          <div className="kn-scrim" onClick={() => setSheetOpen(false)} />
-          <div className="kn-sheet" aria-label="Add knowledge">
-            <header className="kn-sheet-top">
-              <button className="kn-icon-btn" aria-label="Close" onClick={() => setSheetOpen(false)}>
-                <X className="w-5 h-5" strokeWidth={2} />
+        <div className="mt-6">
+          {loading ? (
+            <div className="grid h-40 place-items-center">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="flex flex-col items-center rounded-[28px] bg-card px-6 py-14 text-center ring-1 ring-border/60">
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <Brain className="h-6 w-6" />
+              </span>
+              <p className="mt-4 text-[15px] font-semibold">{t.empty}</p>
+              <p className="mt-1 max-w-xs text-sm text-muted-foreground">{t.emptySub}</p>
+              <button
+                type="button"
+                onClick={() => setDraft({ name: "", use_when: "", content: "" })}
+                className="mt-5 inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-5 text-[13px] font-semibold text-primary-foreground"
+              >
+                <Plus className="h-4 w-4" /> {t.add}
               </button>
-              <h2 className="kn-sheet-title">Add knowledge</h2>
-              <button className="kn-save" onClick={save} disabled={saving}>
-                {saving ? "Saving" : "Save"}
+            </div>
+          ) : shown.length === 0 ? (
+            <p className="py-16 text-center text-sm text-muted-foreground">{t.noResults}</p>
+          ) : (
+            <ul className="space-y-2.5">
+              {shown.map((r) => (
+                <li key={r.id} className="flex items-start gap-3 rounded-[22px] bg-card p-4 ring-1 ring-border/60">
+                  <button
+                    type="button"
+                    onClick={() => setDraft({ id: r.id, name: r.name, use_when: r.use_when, content: r.content })}
+                    className="min-w-0 flex-1 text-start"
+                  >
+                    <p className={`truncate text-[14.5px] font-semibold ${r.enabled ? "" : "text-muted-foreground"}`}>
+                      {r.name || t.untitled}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">{r.content}</p>
+                    <p className="mt-2 truncate text-[12px] text-muted-foreground/80">
+                      {t.when}: {r.use_when}
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={r.enabled}
+                    aria-label={r.enabled ? t.on : t.off}
+                    onClick={() => toggle(r)}
+                    className={`relative mt-0.5 h-6 w-10 shrink-0 rounded-full transition-colors ${r.enabled ? "bg-primary" : "bg-muted"}`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all ${
+                        r.enabled ? "start-[18px]" : "start-0.5"
+                      }`}
+                    />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {draft && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" onClick={() => setDraft(null)} />
+          <div className="relative w-full max-w-lg rounded-t-[28px] bg-card p-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] ring-1 ring-border/60 sm:rounded-[28px]">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={() => setDraft(null)}
+                className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted"
+              >
+                <X className="h-5 w-5" />
               </button>
-            </header>
-
-            <div className="kn-fields">
-              <label className="kn-label" htmlFor="kn-name">Name</label>
-              <input
-                id="kn-name"
-                className="kn-input"
-                placeholder="Knowledge name"
-                maxLength={120}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-
-              <label className="kn-label" htmlFor="kn-when">
-                Use when <span className="kn-req">*</span>
-              </label>
-              <textarea
-                id="kn-when"
-                className="kn-input kn-area"
-                placeholder="When should this knowledge be used"
-                maxLength={500}
-                value={useWhen}
-                onChange={(e) => setUseWhen(e.target.value)}
-              />
-
-              <label className="kn-label" htmlFor="kn-content">
-                Content <span className="kn-req">*</span>
-              </label>
-              <textarea
-                id="kn-content"
-                className="kn-input kn-area kn-area-lg"
-                placeholder="Knowledge content"
-                maxLength={5000}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
+              <h2 className="text-[15px] font-semibold">{draft.id ? t.edit : t.add}</h2>
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving}
+                className="h-9 rounded-full bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                {saving ? t.saving : t.save}
+              </button>
+            </div>
+            <div className="mt-5 space-y-4">
+              <Field label={t.name}>
+                <input
+                  value={draft.name}
+                  maxLength={120}
+                  placeholder={t.namePh}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  className="h-11 w-full rounded-2xl bg-muted/70 px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+              </Field>
+              <Field label={`${t.when} *`}>
+                <textarea
+                  value={draft.use_when}
+                  maxLength={500}
+                  rows={2}
+                  placeholder={t.whenPh}
+                  onChange={(e) => setDraft({ ...draft, use_when: e.target.value })}
+                  className="w-full resize-none rounded-2xl bg-muted/70 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+              </Field>
+              <Field label={`${t.content} *`}>
+                <textarea
+                  value={draft.content}
+                  maxLength={5000}
+                  rows={5}
+                  placeholder={t.contentPh}
+                  onChange={(e) => setDraft({ ...draft, content: e.target.value })}
+                  className="w-full resize-none rounded-2xl bg-muted/70 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+              </Field>
+              {draft.id && (
+                <button
+                  type="button"
+                  onClick={() => remove(draft.id!)}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" /> {t.del}
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
     </div>
   );
-};
+}
 
-const knCss = `
-.kn-root {
-  min-height: 100dvh;
-  background: var(--mn-bg);
-  color: var(--mn-fg);
-  font-family: "Neue Haas Unica", "Helvetica Now Display", -apple-system, "SF Pro Display", Inter, "Segoe UI", Roboto, sans-serif;
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block px-1 text-[12px] font-medium text-muted-foreground">{label}</span>
+      {children}
+    </label>
+  );
 }
-.kn-topbar {
-  position: sticky; top: 0; z-index: 5;
-  display: grid; grid-template-columns: 34px 1fr 34px; align-items: center;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px;
-  background: var(--mn-bg);
-}
-.kn-title { margin: 0; text-align: center; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
-.kn-icon-btn {
-  width: 34px; height: 34px; display: inline-grid; place-items: center;
-  border: 0; background: transparent; color: var(--mn-fg); border-radius: 999px;
-  cursor: pointer; transition: transform 160ms ease;
-}
-.kn-icon-btn:active { transform: scale(0.94); }
-
-.kn-main { padding: 6px 14px 28px; }
-.kn-section-head { margin: 12px 2px 18px; }
-.kn-section-head h2 { margin: 0; font-size: 16px; font-weight: 650; }
-.kn-section-head p { margin: 5px 0 0; max-width: 520px; font-size: 12.5px; line-height: 1.5; color: hsl(var(--foreground) / 0.6); }
-.kn-state { display: grid; place-items: center; padding: 68px 0; color: hsl(var(--foreground) / 0.6); }
-
-.kn-empty {
-  display: grid; justify-items: center; gap: 12px;
-  padding: 32dvh 16px 0;
-  animation: kn-rise 320ms cubic-bezier(0.16,1,0.3,1) both;
-}
-.kn-empty-icon { width: 38px; height: 38px; color: var(--mn-muted); }
-.kn-empty-text { margin: 0; font-size: 13.5px; color: hsl(var(--foreground) / 0.6); }
-.kn-cta {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 10px 17px; border: 0; border-radius: 12px;
-  background: var(--mn-cta-bg); color: var(--mn-cta-fg);
-  font: inherit; font-size: 13.5px; font-weight: 600;
-  cursor: pointer; transition: transform 160ms ease, opacity 160ms ease;
-}
-.kn-cta:active { transform: scale(0.97); opacity: 0.9; }
-
-.kn-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.kn-card {
-  background: var(--mn-card); border-radius: 14px; padding: 12px 14px 6px;
-  animation: kn-rise 320ms cubic-bezier(0.16,1,0.3,1) both;
-}
-.kn-card-name { margin: 0 0 5px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
-.kn-card-when { margin: 0 0 10px; font-size: 12.5px; line-height: 1.5; color: hsl(var(--foreground) / 0.6); }
-.kn-card-foot {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 0 6px; border-top: 1px solid var(--mn-sep);
-}
-.kn-status {
-  display: inline-flex; align-items: center; gap: 6px;
-  border: 0; background: transparent; padding: 0;
-  font: inherit; font-size: 12.5px; color: var(--mn-muted); cursor: pointer;
-}
-.kn-status.is-on { color: var(--mn-accent); }
-.kn-dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
-.kn-time { font-size: 12.5px; color: hsl(var(--foreground) / 0.6); }
-
-.kn-sheet-wrap {
-  position: fixed; inset: 0; z-index: 60;
-  background: transparent; border: 0; padding: 0;
-}
-.kn-scrim {
-  position: absolute; inset: 0;
-  background: hsl(var(--background) / 0.18);
-  animation: kn-fade 200ms ease both;
-}
-.kn-sheet {
-  position: absolute; inset: 13dvh 0 0;
-  background: var(--mn-sheet);
-  border: 0 !important; border-radius: 22px 22px 0 0; overflow-y: auto;
-  box-shadow: 0 -16px 34px hsl(var(--background) / 0.32);
-  animation: kn-up 300ms cubic-bezier(0.16,1,0.3,1) both;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
-}
-.kn-sheet-top {
-  position: sticky; top: 0; z-index: 2; background: var(--mn-sheet);
-  display: grid; grid-template-columns: 34px 1fr auto; align-items: center;
-  padding: 14px 12px 10px;
-}
-.kn-sheet .kn-icon-btn {
-  background: transparent !important;
-  color: var(--mn-fg) !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-.kn-sheet-title { margin: 0; text-align: center; font-size: 15.5px; font-weight: 600; }
-.kn-save {
-  border: 0; background: transparent; color: var(--mn-fg);
-  font: inherit; font-size: 14px; font-weight: 600; padding: 7px 9px; cursor: pointer;
-}
-.kn-save:disabled { opacity: 0.5; }
-
-.kn-fields { padding: 4px 16px 0; display: grid; gap: 6px; }
-.kn-label {
-  margin-top: 12px; font-size: 13px; font-weight: 500;
-  color: hsl(var(--foreground) / 0.85);
-}
-.kn-req { color: var(--mn-danger); }
-.kn-input {
-  width: 100%; box-sizing: border-box;
-  background: var(--mn-input) !important;
-  border: 0 !important;
-  border-radius: 13px;
-  padding: 11px 13px !important; color: var(--mn-fg); font-family: inherit;
-  font-size: 14.5px !important;
-  line-height: 1.4;
-  outline: none !important; box-shadow: none !important;
-  appearance: none; transition: background 160ms ease, box-shadow 160ms ease;
-}
-.kn-input::placeholder { color: hsl(var(--foreground) / 0.6); font-size: 14.5px; }
-.kn-input:focus {
-  background: var(--mn-card-2) !important;
-  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.1) !important;
-}
-.kn-area { min-height: 64px; resize: none; }
-.kn-area-lg { min-height: 88px; }
-
-@keyframes kn-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes kn-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes kn-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
-`;
-
-export default MemoryPage;
