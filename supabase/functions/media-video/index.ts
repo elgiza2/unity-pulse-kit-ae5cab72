@@ -158,9 +158,10 @@ Deno.serve(async (request) => {
   if (!user)
     return out({ error: true, paywall: true, message: "Sign in to generate videos." }, 401);
 
+  // Fixed tiers: free = MiniMax (1/day), subscribers = Seedance 2.5 (5/day).
+  // The client-selected model is ignored.
+  return handleTier(user.id, body);
   const model = String(body.model_slug || "wavespeed-minimax-h3");
-  const wave = waveRules[model];
-  if (wave) return handleWave(user.id, model, wave, body);
   const rule = rules[model];
   if (!rule) return out({ error: true, message: "Choose a supported Runway video model." }, 400);
   const duration = Number(body.duration || rule.durations[0]);
