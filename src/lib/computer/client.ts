@@ -228,3 +228,10 @@ export function computerErrorMessage(
       return providerMessage?.trim() || code || "";
   }
 }
+
+function localNow(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  const day = d.toLocaleDateString("en-US", { weekday: "long" });
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())} (${day})`;
+}
