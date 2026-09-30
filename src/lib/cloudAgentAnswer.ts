@@ -71,7 +71,7 @@ export async function runCloudAgentAnswer(
       await stopComputerTask(created.task_id).catch(() => undefined);
       return steps.length ? { text: "", steps, taskId: created.task_id } : null;
     }
-    await sleep(2_500);
+    await sleep(1_200);
     const snapshot = await pollComputerTask(created.task_id).catch(() => null);
     if (!snapshot?.task) continue;
 
