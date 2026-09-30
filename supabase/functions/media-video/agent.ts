@@ -58,6 +58,7 @@ export async function handleAgent(
     const keys = await vaultKeys(PROVIDER);
     if (!keys.length) return out({ error: "no_capacity" }, 503);
     let lastError = "provider_error";
+    let planLockedKeys = 0;
     for (const key of keys) {
       await noteKeyAttempt(key);
       try {
@@ -86,13 +87,26 @@ export async function handleAgent(
       } catch (e) {
         lastError = e instanceof Error ? e.message : lastError;
         const status = Number((e as any)?.providerStatus || 500);
-        // Model/plan errors are config issues, not dead keys — never deplete for them.
+        // Model/plan errors are tied to the Browser Use project behind this
+        // key. Keep trying: another configured key may belong to an eligible
+        // project. Never mark a healthy key as depleted for account limits.
         if (status === 403 && /free plan|buy credits|not available/i.test(lastError)) {
-          return out({ error: "agent_plan_locked" }, 402);
+          planLockedKeys += 1;
+          continue;
         }
         await noteKeyFail(key, lastError, status);
         if (status === 400 || status === 422) break;
       }
+    }
+    if (planLockedKeys === keys.length) {
+      return out(
+        {
+          error: "agent_plan_locked",
+          message:
+            "Browser Use allows this DeepSeek model in its dashboard, but every configured API key is blocked from using it through the API.",
+        },
+        402,
+      );
     }
     return out({ error: "provider_error", message: lastError }, 502);
   }

@@ -69,7 +69,11 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   });
   const data = (await resp.json().catch(() => ({}))) as Record<string, unknown>;
   if (resp.status === 401) throw new Error(SIGN_IN_MESSAGE);
-  if (!resp.ok) throw new Error((data.error as string) || `HTTP ${resp.status}`);
+  if (!resp.ok) {
+    const code = typeof data.error === "string" ? data.error : `HTTP ${resp.status}`;
+    const detail = typeof data.message === "string" ? data.message : null;
+    throw new Error(computerErrorMessage(code, detail));
+  }
   return data as T;
 
 }
@@ -205,7 +209,10 @@ export function computerErrorMessage(
     case "rate_limited":
       return "Too many computer tasks at once — try again in a minute.";
     case "agent_plan_locked":
-      return "The agent is temporarily unavailable. Please try again later.";
+      return (
+        providerMessage?.trim() ||
+        "Browser Use has blocked the selected DeepSeek model for the configured API keys."
+      );
     case "stopped":
       return "Task stopped.";
     case "provider_error":
