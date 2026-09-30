@@ -117,3 +117,10 @@
 - [ ] Connect Firebase Cloud Messaging (blocked: user must approve the Firebase connection)
 - [ ] Android developer adds the MegsyAndroid bridge from docs/android-bridge.md (blocked: outside this project)
 - [ ] Publish the site so the every-minute reminder check reaches it
+
+## Credit system (September 30, 2026)
+- [ ] Define one credit policy for free and paid users.
+- [ ] Centralize plan grants and per-service costs.
+- [ ] Apply safe initial balances to all existing users without double grants.
+- [ ] Enforce atomic charging/refunds across chat, agent, image, video, slides, and files.
+- [ ] Update pricing and usage pages from the same catalog.
