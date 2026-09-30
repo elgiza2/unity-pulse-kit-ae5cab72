@@ -38,6 +38,7 @@ import {
   ReferralsPage,
   ReferralsDashboardTab,
   KPage,
+  IntegrationsPage,
   ReferralResourcesPage,
   ReferralPartnerTestPage,
   // integrations hub
@@ -395,7 +396,7 @@ export const AppRoutes = ({ currentUserId }: { currentUserId: string | null }) =
       }
     />
     {/* Keep the settings destination compatible with older mobile links. */}
-    <Route path="/settings/integrations" element={<Navigate to="/chat?integrations=1" replace />} />
+    <Route path="/settings/integrations" element={<Navigate to="/integrations" replace />} />
 
     {/* ── Research previews ─────────────────────────────────── */}
     <Route
@@ -544,8 +545,8 @@ export const AppRoutes = ({ currentUserId }: { currentUserId: string | null }) =
     <Route path="/mail/*" element={<Navigate to="/chat" replace />} />
     <Route path="/settings/general" element={<Navigate to="/settings" replace />} />
 
-    <Route path="/integrations" element={<Navigate to="/chat?integrations=1" replace />} />
-    <Route path="/integration" element={<Navigate to="/chat?integrations=1" replace />} />
+    <Route path="/integrations" element={<IntegrationsPage />} />
+    <Route path="/integration" element={<Navigate to="/integrations" replace />} />
     <Route path="/settings/help" element={<Navigate to="/settings/support/help" replace />} />
 
     {/* ── Anything else is a real 404, not a soft-404 chat page ── */}

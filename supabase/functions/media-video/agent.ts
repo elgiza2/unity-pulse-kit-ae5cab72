@@ -150,7 +150,7 @@ export async function handleAgent(
   const status = mapStatus(String(t?.status || ""));
   const ev = await bu(
     key.key,
-    `/runs/${row.provider_task_id}/events?limit=200&include_output=false`,
+    `/runs/${row.provider_task_id}/events?limit=500&include_output=false`,
   ).catch(() => null);
   const steps: any[] = Array.isArray(ev?.events) ? ev.events : [];
   const urlOf = (e: any) => e?.data?.url ?? e?.data?.page_url ?? null;
@@ -169,15 +169,36 @@ export async function handleAgent(
 
   // Files only when the agent really produced some (workspace files).
   const files: any[] = Array.isArray(row.files) ? row.files : [];
-  if (status === "done" && !files.length && t?.workspaceId) {
+  // The file check is spaced out: at most every ~15s while running, plus once at the end.
+  const lastCheck = Date.parse(row.updated_at || row.created_at || "") || 0;
+  const dueCheck = status !== "running" || Date.now() - lastCheck > 15_000;
+  if (dueCheck && t?.workspaceId) {
     const list = await bu(key.key, `/workspaces/${t.workspaceId}/files`).catch(() => null);
+    const seen = new Set(files.map((f: any) => f?.url));
     for (const f of list?.files ?? []) {
-      if (f?.url) files.push({ name: String(f.path).split("/").pop(), url: f.url });
+      if (f?.url && !seen.has(f.url)) files.push({ name: String(f.path).split("/").pop(), url: f.url });
     }
+    if (status === "running")
+      await db
+        .from("computer_tasks")
+        .update({ files, updated_at: new Date().toISOString() })
+        .eq("id", row.id);
   }
 
   const textOf = (e: any) =>
-    e?.data?.summary ?? e?.data?.text ?? e?.data?.message ?? e?.data?.goal ?? e?.data?.title ?? null;
+    e?.data?.next_goal ?? e?.data?.nextGoal ?? e?.data?.summary ?? e?.data?.text ?? e?.data?.message ??
+    e?.data?.goal ?? e?.data?.title ?? e?.data?.thinking ?? e?.data?.reasoning ?? null;
+  // Internal reasoning, streamed through exactly as the provider emits it.
+  const thoughtOf = (e: any) => {
+    const d = e?.data ?? {};
+    const parts = [
+      d.thinking ?? d.reasoning,
+      d.evaluation_previous_goal ?? d.evaluationPreviousGoal,
+      d.memory,
+    ].filter((x: unknown) => typeof x === "string" && x.trim());
+    const joined = parts.join("\n\n");
+    return joined && joined !== textOf(e) ? joined : null;
+  };
   const last = [...steps].reverse().find((e) => textOf(e));
   const task = {
     id: row.id,
@@ -207,7 +228,7 @@ export async function handleAgent(
     .map((e) => ({
       id: `${row.id}-${e.id}`,
       title: String(textOf(e)),
-      detail: null,
+      detail: thoughtOf(e),
       url: browsed ? urlOf(e) : null,
       created_at: e.ts ?? row.created_at,
       kind: browsed ? "browser" : "think",

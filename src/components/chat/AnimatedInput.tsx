@@ -6,7 +6,6 @@ import ModelPickerDropdown from "@/components/model-picker/ModelPickerDropdown";
 import type { AgentDef, AgentModel } from "@/lib/agentRegistry";
 import { getAgentById } from "@/lib/agentRegistry";
 import ComposerIntegrationsButton from "@/components/chat/ComposerIntegrationsButton";
-import IntegrationsSheet from "@/components/chat/IntegrationsSheet";
 import ComposerVoiceWave from "@/components/chat/ComposerVoiceWave";
 import { isSendKey } from "@/lib/composerKey";
 import { parseSlashCommand } from "@/lib/slashCommands";
@@ -134,15 +133,14 @@ const AnimatedInput = ({
   const [lastSelectedAgent, setLastSelectedAgent] = useState<AgentDef | null>(null);
   const [focused, setFocused] = useState(false);
   const [listening, setListening] = useState(false);
-  const [integrationsOpen, setIntegrationsOpen] = useState(false);
   const composerLocation = useLocation();
   useEffect(() => {
     if (new URLSearchParams(composerLocation.search).get("integrations") === "1") {
-      setIntegrationsOpen(true);
+      navigate("/integrations");
     }
   }, [composerLocation.search]);
   useEffect(() => {
-    const open = () => setIntegrationsOpen(true);
+    const open = () => navigate("/integrations");
     window.addEventListener("megsy:open-integrations", open);
     return () => window.removeEventListener("megsy:open-integrations", open);
   }, []);
@@ -465,9 +463,9 @@ const AnimatedInput = ({
             </Button>
 
             {(focused || hasText) && (
-              <ComposerIntegrationsButton onClick={() => setIntegrationsOpen(true)} />
+              <ComposerIntegrationsButton onClick={() => navigate("/integrations")} />
             )}
-            <IntegrationsSheet open={integrationsOpen} onOpenChange={setIntegrationsOpen} />
+
 
             {serviceTools}
 
