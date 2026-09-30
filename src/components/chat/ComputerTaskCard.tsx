@@ -179,7 +179,9 @@ export default function ComputerTaskCard({ taskId }: Props) {
   if (!loaded) return <AgentThinkingLine />;
 
   if (running) {
-    return <AgentThinkingLine text={events.at(-1)?.title || task?.progress} />;
+    const live = events.at(-1);
+    // Mirror the provider: show its own internal reasoning when it streams it.
+    return <AgentThinkingLine text={live?.detail || live?.title || task?.progress} />;
   }
 
   // The provider often hands back its own raw payload (JSON, "Final result:",
