@@ -3,7 +3,6 @@ import MobileChatLanding, {
   type ActivePill,
   type LandingChipId,
 } from "@/components/chat/mobile/MobileChatLanding";
-import MobileModeBar from "@/components/chat/mobile/MobileModeBar";
 import { AGENTS, type AgentDef } from "@/lib/agentRegistry";
 import { isPaidUser } from "@/lib/subscriptionGating";
 import { getChatModelDisplayLabel, type ChatMode } from "../chatConstants";
