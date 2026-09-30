@@ -3947,3 +3947,22 @@ a.bg-primary:hover,
 .offer-visual-lines-one { top: 34%; left: -8%; transform: rotate(17deg); }
 .offer-visual-lines-two { bottom: 24%; right: -8%; transform: rotate(-14deg); opacity: .65; }
 @media (min-width: 640px) { .offer-visual { min-height: 270px; } }
+
+/* ── Megsy warm brand gradient helpers ─────────────────────────────── */
+.megsy-brand {
+  background-image: linear-gradient(135deg, hsl(var(--brand-from)), hsl(var(--brand-to)));
+  color: hsl(var(--brand-foreground));
+}
+.megsy-brand-text {
+  background-image: linear-gradient(135deg, hsl(var(--brand-from)), hsl(var(--brand-to)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.megsy-brand-soft {
+  background-image: linear-gradient(
+    135deg,
+    hsl(var(--brand-from) / 0.12),
+    hsl(var(--brand-to) / 0.12)
+  );
+}
