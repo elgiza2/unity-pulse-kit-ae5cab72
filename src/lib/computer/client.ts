@@ -204,6 +204,8 @@ export function computerErrorMessage(
       return "Computer agent is unavailable right now. Please try again shortly.";
     case "rate_limited":
       return "Too many computer tasks at once — try again in a minute.";
+    case "agent_plan_locked":
+      return "The agent is temporarily unavailable. Please try again later.";
     case "stopped":
       return "Task stopped.";
     case "provider_error":
