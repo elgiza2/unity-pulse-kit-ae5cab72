@@ -31,7 +31,7 @@ interface Props {
   taskId: string;
 }
 
-const POLL_MS = 3000;
+const POLL_MS = 1500;
 const TASK_TIMEOUT_MS = 45 * 60 * 1000;
 
 
