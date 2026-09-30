@@ -114,3 +114,6 @@
 - [ ] Google Calendar per-user connection (needs Google OAuth client approval)
 - [ ] Background push reminders + daily brief when app is closed (needs push setup + scheduler)
 - [ ] Android wrapper: real phone alarms (Capacitor)
+- [ ] Connect Firebase Cloud Messaging (blocked: user must approve the Firebase connection)
+- [ ] Android developer adds the MegsyAndroid bridge from docs/android-bridge.md (blocked: outside this project)
+- [ ] Publish the site so the every-minute reminder check reaches it
