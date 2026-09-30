@@ -1747,14 +1747,28 @@ const ChatPage = () => {
     // so there is no separate coder path to keep in sync.
 
 
-    // ── Computer Agent: explicit @computer / Agent pick, or model-routed "needs a real computer" requests ──
+    // ── The single agent (Browser Use Cloud, DeepSeek) handles every turn.
+    // Image/video asks are the only exception: they go to the internal media
+    // tools (fixed image model, tiered video) further below.
     {
-      const agentRequested = selectedAgent?.id === "computer";
-      let intent: { use: boolean; task: string } = { use: agentRequested, task: text };
-      if (chatMode !== "operator" && !agentRequested) {
-        const { routeComputerIntent } = await import("@/lib/computer/classifyIntent");
-        intent = await routeComputerIntent(text, pendingComputerIntentRef.current);
+      let isMediaAsk = chatMode === "images" || chatMode === "video";
+      if (!isMediaAsk && text.trim()) {
+        try {
+          const { detectMediaIntent, detectImageEditIntent } = await import(
+            "@/lib/media/autoMediaIntent"
+          );
+          const hasImage = messages.some((m: any) =>
+            (Array.isArray(m?.mediaResults) ? m.mediaResults : []).some(
+              (r: any) => r?.type === "image" && r?.url,
+            ),
+          );
+          isMediaAsk =
+            !!detectMediaIntent(text) || (hasImage && detectImageEditIntent(text));
+        } catch {
+          /* default to the agent */
+        }
       }
+      const intent: { use: boolean; task: string } = { use: !isMediaAsk, task: text };
       if (intent.use) pendingComputerIntentRef.current = intent.task || text;
       if (chatMode !== "operator" && intent.use) {
         const { canRunComputerTask, recordComputerTask, computerDailyLimit } =

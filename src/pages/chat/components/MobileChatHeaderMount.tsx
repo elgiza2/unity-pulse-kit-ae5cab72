@@ -138,8 +138,8 @@ export function MobileChatHeaderMount(props: MobileChatHeaderMountProps) {
       chatUserId={chatUserId}
       scrollContainerRef={scrollContainerRef}
       modelSlot={
-
-        !isMobile ? null : (
+        // Model picker removed: one agent, fixed models.
+        true ? null : (
           <ComposerModelMenu
             mode={chatMode}
             open={tierMenuOpen}
@@ -156,7 +156,7 @@ export function MobileChatHeaderMount(props: MobileChatHeaderMountProps) {
             settingsPanel={
               chatMode === "images" || chatMode === "video" ? (
                 <MediaSettingsPanel
-                  mode={chatMode}
+                  mode={chatMode as "images" | "video"}
                   onChange={(settings) => {
                     if (settings.duration !== undefined) props.setVideoDurationSec?.(settings.duration);
                   }}

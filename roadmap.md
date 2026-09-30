@@ -95,3 +95,12 @@
 - [ ] Rebuild the product UI as Nomi inside the existing React SPA; do not introduce TanStack page architecture.
 - [ ] Keep the permanent chat as home, first-use welcome, contextual animated avatar, and calls screen.
 - [ ] Isolate all new persisted data in `nomi_*` tables without altering legacy Megsy tables.
+
+## Restructure (September 30, 2026)
+- [x] Chat chips, mode bars and model pickers removed; every message goes to the single agent.
+- [x] Agent = Browser Use Cloud on `deepseek-v4-flash-vision`, served by `media-video` (`kind: "agent"`). Live computer only when a real page was opened; files only when produced.
+- [x] Images fixed to Runway `gpt_image_2`, quality `low` (`media-video`, `kind: "image"`).
+- [x] Videos: free = MiniMax Hailuo 1/day, subscribers = Seedance 2.5 5/day (`consume_daily_video`).
+- [ ] Add WaveSpeed keys at `/k` (none stored yet) — blocked on the owner.
+- [ ] Live end-to-end test while signed in — the preview can't sign in automatically on this backend.
+- [ ] Image generation has no usage limit or charge yet (to be set with "the other limits").

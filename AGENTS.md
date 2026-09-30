@@ -77,3 +77,7 @@ Then smoke the routes (`/`, `/pricing`, `/chat`, `/settings`, `/usage`,
 ## 6. Known open items
 
 See `roadmap.md`.
+
+## 7. Restructure rules (Sep 2026)
+- New edge functions can't be created from this project; the agent (`kind: "agent"`) and the fixed image model (`kind: "image"`) live inside `media-video`. Why: it is the only function whose deployed code matches the repo.
+- Do not redeploy `anything-api` from this repo: its deployed version has modules missing here. Why: redeploying would break live features.

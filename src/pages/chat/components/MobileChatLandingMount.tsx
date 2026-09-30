@@ -3,7 +3,6 @@ import MobileChatLanding, {
   type ActivePill,
   type LandingChipId,
 } from "@/components/chat/mobile/MobileChatLanding";
-import MobileModeBar from "@/components/chat/mobile/MobileModeBar";
 import { AGENTS, type AgentDef } from "@/lib/agentRegistry";
 import { isPaidUser } from "@/lib/subscriptionGating";
 import { getChatModelDisplayLabel, type ChatMode } from "../chatConstants";
@@ -109,16 +108,9 @@ export function MobileChatLandingMount(props: MobileChatLandingMountProps) {
         setInput(s.label);
       }}
       modelControlSlot={undefined}
-      modeBarSlot={
-        hasMobileServicePanel ? (
-          renderMobileServicePanel()
-        ) : (
-          <MobileModeBar
-            mode={selectedAgent?.id === "docs" ? "docs" : (chatMode as any)}
-            onChange={onModeBarChange}
-          />
-        )
-      }
+      modeBarSlot={undefined}
+      chips={[]}
+      suggestions={[]}
       onChipClick={(id: LandingChipId) => {
         if (id === "image") {
           handleModeChange("images" as ChatMode);
