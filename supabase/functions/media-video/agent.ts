@@ -4,8 +4,9 @@
 // Actions: create | poll | stop — same response shape as the old computer-agent.
 import { noteKeyAttempt, noteKeyFail, noteKeyOk, vaultKeys } from "./_shared/keyVault.ts";
 
-const BU = "https://api.browser-use.com/api/v2";
-const LLM = "deepseek-v4.1-flash";
+// v4 "runs" API: the only one where DeepSeek (UI name "DeepSeek V4.1 Flash") is free-plan.
+const BU = "https://api.browser-use.com/api/v4";
+const LLM = "deepseek-v4-flash-vision";
 const PROVIDER = "browser-use";
 
 const SYSTEM = `You are Megsy, a general-purpose agent. Decide yourself what the task needs.
@@ -40,8 +41,8 @@ async function bu(key: string, path: string, init: RequestInit = {}) {
 }
 
 function mapStatus(s: string) {
-  if (s === "finished") return "done";
-  if (s === "failed" || s === "stopped") return "failed";
+  if (s === "completed" || s === "finished") return "done";
+  if (s === "failed" || s === "stopped" || s === "cancelled") return "failed";
   return "running";
 }
 
@@ -60,17 +61,9 @@ export async function handleAgent(
     for (const key of keys) {
       await noteKeyAttempt(key);
       try {
-        const task = await bu(key.key, "/tasks", {
+        const task = await bu(key.key, "/runs", {
           method: "POST",
-          body: JSON.stringify({
-            task: prompt,
-            llm: LLM,
-            maxSteps: 60,
-            // Fast mode: quick answers for simple turns, same agent + model.
-            flashMode: true,
-            systemPromptExtension: SYSTEM,
-            metadata: { user_id: userId },
-          }),
+          body: JSON.stringify({ task: `${SYSTEM}\n\nUser task:\n${prompt}`, model: LLM }),
         });
         await noteKeyOk(key);
         const { data: row, error } = await db
@@ -115,53 +108,59 @@ export async function handleAgent(
   if (!key) return out({ error: "no_capacity" }, 503);
 
   if (body.action === "stop") {
-    if (row.provider_session_id)
-      await bu(key.key, `/sessions/${row.provider_session_id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ action: "stop" }),
-      }).catch(() => null);
+    await bu(key.key, `/runs/${row.provider_task_id}/cancel`, { method: "POST" }).catch(() => null);
     await db.from("computer_tasks").update({ status: "failed", error: "stopped" }).eq("id", row.id);
     return out({ ok: true });
   }
 
-  const t = await bu(key.key, `/tasks/${row.provider_task_id}`);
+  const t = await bu(key.key, `/runs/${row.provider_task_id}`);
   const status = mapStatus(String(t?.status || ""));
-  const steps: any[] = Array.isArray(t?.steps) ? t.steps : [];
+  const ev = await bu(
+    key.key,
+    `/runs/${row.provider_task_id}/events?limit=200&include_output=false`,
+  ).catch(() => null);
+  const steps: any[] = Array.isArray(ev?.events) ? ev.events : [];
+  const urlOf = (e: any) => e?.data?.url ?? e?.data?.page_url ?? null;
   // The computer is only shown when the agent actually opened a real page.
-  const browsed = steps.some((s) => s?.url && !/^(about:blank|chrome:)/.test(String(s.url)));
+  const browsed = steps.some((e) => {
+    const u = urlOf(e);
+    return u && !/^(about:blank|chrome:)/.test(String(u));
+  });
+  const sessionId = t?.sessionId ? String(t.sessionId) : row.provider_session_id;
 
   let liveUrl: string | null = null;
-  if (status === "running" && browsed && row.provider_session_id) {
-    const s = await bu(key.key, `/sessions/${row.provider_session_id}`).catch(() => null);
+  if (status === "running" && browsed && sessionId) {
+    const s = await bu(key.key, `/browsers/${sessionId}`).catch(() => null);
     liveUrl = s?.liveUrl ?? null;
   }
 
-  // Files only when the agent really produced some.
-  let files: any[] = Array.isArray(row.files) ? row.files : [];
-  if (status === "done" && !files.length && Array.isArray(t?.outputFiles)) {
-    for (const f of t.outputFiles) {
-      try {
-        const link = await bu(key.key, `/files/tasks/${row.provider_task_id}/output-files/${f.id}`);
-        const url = link?.downloadUrl ?? link?.url;
-        if (url) files.push({ name: f.fileName, url });
-      } catch {
-        /* skip unreadable file */
-      }
+  // Files only when the agent really produced some (workspace files).
+  const files: any[] = Array.isArray(row.files) ? row.files : [];
+  if (status === "done" && !files.length && t?.workspaceId) {
+    const list = await bu(key.key, `/workspaces/${t.workspaceId}/files`).catch(() => null);
+    for (const f of list?.files ?? []) {
+      if (f?.url) files.push({ name: String(f.path).split("/").pop(), url: f.url });
     }
   }
 
+  const textOf = (e: any) =>
+    e?.data?.summary ?? e?.data?.text ?? e?.data?.message ?? e?.data?.goal ?? e?.data?.title ?? null;
+  const last = [...steps].reverse().find((e) => textOf(e));
   const task = {
     id: row.id,
     status,
-    progress: steps.length ? String(steps[steps.length - 1]?.nextGoal || "") : null,
-    result_text: status === "done" ? String(t?.output ?? "") : null,
+    progress: last ? String(textOf(last)) : null,
+    result_text:
+      status === "done"
+        ? String(t?.result ?? (typeof t?.output === "string" ? t.output : JSON.stringify(t?.output ?? "")))
+        : null,
     files,
-    error: status === "failed" ? String(t?.output || "failed") : null,
+    error: status === "failed" ? String(t?.error || t?.status || "failed") : null,
     prompt: row.prompt,
     live_url: liveUrl,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    provider_session_id: browsed ? row.provider_session_id : null,
+    provider_session_id: browsed ? sessionId : null,
   };
   if (status !== "running")
     await db
@@ -171,16 +170,16 @@ export async function handleAgent(
       .eq("status", "running");
 
   const events = steps
-    .filter((s) => s?.nextGoal || s?.evaluationPreviousGoal)
-    .map((s) => ({
-      id: `${row.id}-${s.number}`,
-      title: String(s.nextGoal || s.evaluationPreviousGoal),
-      detail: s.memory ? String(s.memory) : null,
-      url: browsed ? (s.url ?? null) : null,
-      created_at: row.created_at,
+    .filter((e) => textOf(e))
+    .map((e) => ({
+      id: `${row.id}-${e.id}`,
+      title: String(textOf(e)),
+      detail: null,
+      url: browsed ? urlOf(e) : null,
+      created_at: e.ts ?? row.created_at,
       kind: browsed ? "browser" : "think",
-      duration: s.duration ?? null,
-      screenshot_url: browsed ? (s.screenshotUrl ?? null) : null,
+      duration: null,
+      screenshot_url: browsed ? (e?.data?.screenshot_url ?? e?.data?.screenshotUrl ?? null) : null,
     }));
   return out({ task, events });
 }
