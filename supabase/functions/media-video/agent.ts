@@ -7,6 +7,8 @@ import { noteKeyAttempt, noteKeyFail, noteKeyOk, vaultKeys } from "./_shared/key
 // v4 "runs" API: the only one where DeepSeek (UI name "DeepSeek V4.1 Flash") is free-plan.
 const BU = "https://api.browser-use.com/api/v4";
 const LLM = "deepseek-v4-flash-vision";
+// Free-plan models used while DeepSeek is locked on the account (auto-returns to DeepSeek after top-up).
+const FREE_FALLBACKS = ["browser-use-llm", "bu-2-0-mini-preview", "gemini-2.5-flash"];
 const PROVIDER = "browser-use";
 
 const SYSTEM = `You are Megsy, a general-purpose agent. Decide yourself what the task needs.
@@ -59,13 +61,29 @@ export async function handleAgent(
     if (!keys.length) return out({ error: "no_capacity" }, 503);
     let lastError = "provider_error";
     let planLockedKeys = 0;
+    const createRun = async (apiKey: string) => {
+      // DeepSeek first; if the plan locks it, fall back to free Browser Use models.
+      let err: unknown;
+      for (const model of [LLM, ...FREE_FALLBACKS]) {
+        try {
+          return await bu(apiKey, "/runs", {
+            method: "POST",
+            body: JSON.stringify({ task: `${SYSTEM}\n\nUser task:\n${prompt}`, model }),
+          });
+        } catch (e) {
+          err = e;
+          const st = Number((e as any)?.providerStatus || 500);
+          const msg = e instanceof Error ? e.message : "";
+          const locked = st === 402 || (st === 403 && /free plan|buy credits|not available/i.test(msg));
+          if (!locked && st !== 422 && st !== 400) throw e;
+        }
+      }
+      throw err;
+    };
     for (const key of keys) {
       await noteKeyAttempt(key);
       try {
-        const task = await bu(key.key, "/runs", {
-          method: "POST",
-          body: JSON.stringify({ task: `${SYSTEM}\n\nUser task:\n${prompt}`, model: LLM }),
-        });
+        const task = await createRun(key.key);
         await noteKeyOk(key);
         const { data: row, error } = await db
           .from("computer_tasks")
