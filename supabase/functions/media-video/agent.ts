@@ -5,7 +5,7 @@
 import { noteKeyAttempt, noteKeyFail, noteKeyOk, vaultKeys } from "./_shared/keyVault.ts";
 
 const BU = "https://api.browser-use.com/api/v2";
-const LLM = "deepseek-v4-flash-vision";
+const LLM = "deepseek-v4.1-flash";
 const PROVIDER = "browser-use";
 
 const SYSTEM = `You are Megsy, a general-purpose agent. Decide yourself what the task needs.
