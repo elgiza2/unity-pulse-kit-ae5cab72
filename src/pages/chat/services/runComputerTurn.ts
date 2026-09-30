@@ -7,9 +7,9 @@
  */
 import { toast } from "sonner";
 import { stripComputerMention } from "@/lib/computer/shouldUseComputer";
-import type { Message, ToolPart } from "../chatConstants";
+import type { Message } from "../chatConstants";
 import { PENDING_COMPUTER_RUN } from "@/lib/computer/activeRun";
-import { setComputerLiveView, clearComputerLiveView } from "@/lib/computer/liveView";
+import { clearComputerLiveView } from "@/lib/computer/liveView";
 import type { AttachedFile } from "../hooks/useAttachments";
 
 export interface RunComputerArgs {
@@ -53,18 +53,11 @@ Execution guardrails:
 - Do not claim completion unless the produced file is readable and valid.`;
   const assistantClientId = `assistant-${localTurnId}`;
 
-  const computerTool: ToolPart = {
-    id: `computer-${localTurnId}`,
-    name: "megsy_computer",
-    appSlug: "computer",
-    target: prompt || text,
-    state: "running",
-  };
 
   setMessages((prev) => [
     ...prev,
     userMsg,
-    { role: "assistant", content: "", clientId: assistantClientId, agentPending: true } as Message,
+    { role: "assistant", content: "", clientId: assistantClientId, agentPending: true },
   ]);
   setInput("");
   setAttachedFiles([]);
