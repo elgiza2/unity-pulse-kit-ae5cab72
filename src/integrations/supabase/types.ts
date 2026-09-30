@@ -2789,6 +2789,72 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_operations: {
+        Row: {
+          action_type: string
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          kind: string
+          metadata: Json
+          operation_key: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind: string
+          metadata?: Json
+          operation_key: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          operation_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_pricing: {
+        Row: {
+          active: boolean
+          credits: number
+          feature: string
+          free: boolean
+          max_credits: number | null
+          min_credits: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          credits: number
+          feature: string
+          free?: boolean
+          max_credits?: number | null
+          min_credits?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          credits?: number
+          feature?: string
+          free?: boolean
+          max_credits?: number | null
+          min_credits?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_transactions: {
         Row: {
           action_type: string
@@ -2812,6 +2878,42 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_wallets: {
+        Row: {
+          bonus_credits: number
+          created_at: string
+          daily_credits: number
+          daily_grant_date: string | null
+          plan_credits: number
+          plan_period_end: string | null
+          purchased_credits: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bonus_credits?: number
+          created_at?: string
+          daily_credits?: number
+          daily_grant_date?: string | null
+          plan_credits?: number
+          plan_period_end?: string | null
+          purchased_credits?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bonus_credits?: number
+          created_at?: string
+          daily_credits?: number
+          daily_grant_date?: string | null
+          plan_credits?: number
+          plan_period_end?: string | null
+          purchased_credits?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -12151,6 +12253,7 @@ export type Database = {
         }
         Returns: Json
       }
+      ensure_credit_wallet: { Args: { p_user_id: string }; Returns: undefined }
       ensure_my_mailbox: {
         Args: never
         Returns: {
@@ -12197,6 +12300,17 @@ export type Database = {
         Returns: Json
       }
       get_workspace_invite_details: { Args: { p_token: string }; Returns: Json }
+      grant_credit_bucket: {
+        Args: {
+          p_action_type: string
+          p_amount: number
+          p_bucket: string
+          p_description?: string
+          p_operation_key?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       grant_referral_milestone: { Args: { _referrer: string }; Returns: Json }
       grant_user_credits: {
         Args: {
@@ -12335,6 +12449,10 @@ export type Database = {
           similarity: number
         }[]
       }
+      maybe_grant_referral_credit: {
+        Args: { p_referred_id: string }
+        Returns: undefined
+      }
       model_requires_paid_plan: {
         Args: { _model_id: string }
         Returns: boolean
@@ -12451,6 +12569,7 @@ export type Database = {
         Args: { p_provider: string; p_value: string }
         Returns: Json
       }
+      sync_credit_total: { Args: { p_user_id: string }; Returns: number }
       take_service_key: {
         Args: { p_provider: string }
         Returns: {
