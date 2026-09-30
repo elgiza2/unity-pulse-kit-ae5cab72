@@ -82,3 +82,4 @@ See `roadmap.md`.
 - New edge functions can't be created from this project; the agent (`kind: "agent"`) and the fixed image model (`kind: "image"`) live inside `media-video`. Why: it is the only function whose deployed code matches the repo.
 - Do not redeploy `anything-api` from this repo: its deployed version has modules missing here. Why: redeploying would break live features.
 - Agent creates tasks/goals by ending replies with [[TASK|ALARM|GOAL: title | local time]]; ComputerTaskCard saves them via src/lib/life/agentActions.ts. Why: the agent runs on Browser Use and cannot write to our DB.
+- Phone alarms/reminders go through the `MegsyAndroid` WebView bridge (src/lib/native/bridge.ts, docs/android-bridge.md); background push + morning plan via pg_cron → /api/public/reminders-tick (FCM connector, key in public.cron_secrets). Why: the Android app wraps the site, so web push doesn't work inside it.
