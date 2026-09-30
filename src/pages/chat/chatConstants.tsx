@@ -83,6 +83,7 @@ export interface Message {
   chatJobId?: string;
   operatorRunId?: string;
   /** Live Computer Agent task rendered as an in-chat card. */
+  agentPending?: boolean;
   computerTaskId?: string;
   /** Live long-running Megsy Computer session (own machine + preview). */
   longRunId?: string;

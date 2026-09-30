@@ -7,9 +7,9 @@
  */
 import { toast } from "sonner";
 import { stripComputerMention } from "@/lib/computer/shouldUseComputer";
-import type { Message, ToolPart } from "../chatConstants";
+import type { Message } from "../chatConstants";
 import { PENDING_COMPUTER_RUN } from "@/lib/computer/activeRun";
-import { setComputerLiveView, clearComputerLiveView } from "@/lib/computer/liveView";
+import { clearComputerLiveView } from "@/lib/computer/liveView";
 import type { AttachedFile } from "../hooks/useAttachments";
 
 export interface RunComputerArgs {
@@ -53,33 +53,19 @@ Execution guardrails:
 - Do not claim completion unless the produced file is readable and valid.`;
   const assistantClientId = `assistant-${localTurnId}`;
 
-  const computerTool: ToolPart = {
-    id: `computer-${localTurnId}`,
-    name: "megsy_computer",
-    appSlug: "computer",
-    target: prompt || text,
-    state: "running",
-  };
 
   setMessages((prev) => [
     ...prev,
     userMsg,
-    { role: "assistant", content: "", clientId: assistantClientId, toolParts: [computerTool] },
+    { role: "assistant", content: "", clientId: assistantClientId, agentPending: true },
   ]);
   setInput("");
   setAttachedFiles([]);
 
-  // Flip the composer's send button into a stop button right away — the turn
-  // is already in flight before the provider hands back a run id.
+  // Flip the send button into a stop button right away. The computer screen
+  // itself only appears later, if the agent really opens a page.
   const { setActiveComputerRun, clearActiveComputerRun } = await import("@/lib/computer/activeRun");
   setActiveComputerRun(PENDING_COMPUTER_RUN);
-  setComputerLiveView({
-    id: PENDING_COMPUTER_RUN,
-    url: null,
-    poster: null,
-    status: null,
-    active: true,
-  });
 
   try {
     const cid = await createOrUpdateConversation(prompt || "Computer task");
@@ -98,42 +84,8 @@ Execution guardrails:
       attachments,
     });
 
-    // Model-written intro streamed into the assistant bubble and never removed.
-    let intro = "";
-    const introPromise = (async () => {
-      try {
-        const { generateTurnPreamble } = await import("./turnPreamble");
-        await generateTurnPreamble({
-          kind: "computer",
-          userText: prompt || text,
-          conversationId: cid,
-          onDelta: (delta) => {
-            intro += delta;
-            setMessages((prev) =>
-              prev.map((m) => (m.clientId === assistantClientId ? { ...m, content: intro } : m)),
-            );
-          },
-        });
-      } catch {
-        /* the task has already started; narration is optional */
-      }
-    })();
-
-    // A short plan is also prepared while the task is starting.
-    let plan: string[] = [];
-    const planPromise = (async () => {
-      try {
-        const { generateRunPlan } = await import("@/lib/computer/narration");
-        plan = await generateRunPlan(prompt || text, cid);
-        if (plan.length) {
-          setMessages((prev) =>
-            prev.map((m) => (m.clientId === assistantClientId ? { ...m, computerPlan: plan } : m)),
-          );
-        }
-      } catch {
-        /* the live provider events are sufficient */
-      }
-    })();
+    const intro = "";
+    const plan: string[] = [];
 
     try {
       const task = await taskPromise;
@@ -144,7 +96,6 @@ Execution guardrails:
         );
       }
       setActiveComputerRun(task.task_id);
-      await Promise.allSettled([introPromise, planPromise]);
       let assistantId: string | undefined;
       if (cid) {
         assistantId = await saveMessage(cid, "assistant", intro, undefined, {
@@ -163,7 +114,7 @@ Execution guardrails:
                 content: intro,
                 computerTaskId: task.task_id,
                 computerPlan: plan,
-                toolParts: [{ ...computerTool, state: "done" }],
+                agentPending: false,
               }
             : m,
         ),
@@ -178,7 +129,7 @@ Execution guardrails:
             ? {
                 ...m,
                 content: intro ? `${intro}\n\n${msg}` : msg,
-                toolParts: [{ ...computerTool, state: "error", result: msg }],
+                agentPending: false,
               }
             : m,
         ),
@@ -195,7 +146,7 @@ Execution guardrails:
     setMessages((prev) =>
       prev.map((m) =>
         m.clientId === assistantClientId
-          ? { ...m, content: msg, toolParts: [{ ...computerTool, state: "error", result: msg }] }
+          ? { ...m, content: msg, agentPending: false }
           : m,
       ),
     );

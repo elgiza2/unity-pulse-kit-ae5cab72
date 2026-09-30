@@ -15,6 +15,7 @@ import {
 // messages (image plans, doc drafting). Lazy-load them so the base
 // message-item chunk stays lean.
 const AssistantMediaBlock = lazy(() => import("./AssistantMediaBlock"));
+import AgentThinkingLine from "@/components/chat/AgentThinkingLine";
 const ComputerTaskCardLazy = lazy(() => import("@/components/chat/ComputerTaskCard"));
 const ComputerPreviewLazy = lazy(() =>
   import("@/components/computer/ComputerPreview").then((m) => ({ default: m.ComputerPreview })),
@@ -164,7 +165,9 @@ const ChatMessageItemImpl = ({
     !mediaDone;
   const content = (
     <>
-      {showMediaSkeleton ? null : msg.role === "assistant" && msg.longRunId ? (
+      {showMediaSkeleton ? null : msg.role === "assistant" && msg.agentPending && !msg.computerTaskId ? (
+        <AgentThinkingLine />
+      ) : msg.role === "assistant" && msg.longRunId ? (
         <div className="flex flex-col gap-2">
           {typeof msg.content === "string" && msg.content.trim() ? (
             <ChatMessage role="assistant" content={msg.content} />

@@ -20,6 +20,7 @@ import ChatMessage from "@/components/chat/ChatMessage";
 import { useNavigate } from "react-router-dom";
 import { stashFileForPreview } from "@/lib/filePreviewStore";
 import { useUserLang } from "@/lib/authI18n";
+import AgentThinkingLine from "@/components/chat/AgentThinkingLine";
 
 
 import { clearActiveComputerRun, setActiveComputerRun } from "@/lib/computer/activeRun";
@@ -175,10 +176,10 @@ export default function ComputerTaskCard({ taskId }: Props) {
   }, [running, liveUrl, taskId, task?.progress, events]);
   useEffect(() => () => clearComputerLiveView(taskId), [taskId]);
 
-  if (!loaded) return null;
+  if (!loaded) return <AgentThinkingLine />;
 
   if (running) {
-    return null;
+    return <AgentThinkingLine text={events.at(-1)?.title || task?.progress} />;
   }
 
   // The provider often hands back its own raw payload (JSON, "Final result:",
