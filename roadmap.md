@@ -104,3 +104,6 @@
 - [ ] Add WaveSpeed keys at `/k` (none stored yet) — blocked on the owner.
 - [ ] Live end-to-end test while signed in — the preview can't sign in automatically on this backend.
 - [ ] Image generation has no usage limit or charge yet (to be set with "the other limits").
+- [x] Integrations now live only on `/integrations`; chat triggers navigate there instead of opening a sheet.
+- [x] Provider thinking output streams into the Megsy-star status line and persists with task events.
+- [x] Knowledge moved inside the Memory page; notification pages and settings entries were removed.
